@@ -1,0 +1,182 @@
+
+
+// Ensure right column components stack vertically
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem; // Add some spacing between components
+  
+  > * {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+[saved-theme='dark'] body {
+   background:
+        /* top, transparent black, faked with gradient */ 
+        linear-gradient(
+          rgba(0, 0, 0, 0.75), 
+          rgba(0, 0, 0, 0.95)
+        ),
+        /* bottom, image */
+        url("../images/paper-texture-top-view.jpg")
+        fixed;
+}
+[saved-theme='light'] body {
+     background:
+        /* top, transparent black, faked with gradient */ 
+        linear-gradient(
+          rgba(255, 255, 255, 0.5), 
+          rgba(255, 255, 255, 0.25)
+        ),
+        /* bottom, image */
+        url("../images/paper-texture-top-view-2.jpg")
+        fixed;
+}
+
+// Spacing for Darkmode + Search row
+.left.sidebar .row {
+  gap: 1rem; // Adjust this value (0.5rem, 1rem, 1.5rem, etc.)
+}
+
+// Hide anchor-only headers (used for backward-compatible section links)
+h3.anchor-only,
+h2.anchor-only {
+  position: absolute;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  font-size: 0;
+  line-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+// Character card styling for transcluded Fellowship members
+.transclude {
+  border: 2px solid var(--gold, #d4af37);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  background: linear-gradient(
+    135deg,
+    rgba(244, 228, 193, 0.8) 0%,
+    rgba(232, 213, 183, 0.2) 100%
+  );
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 4px 12px rgba(0, 0, 0, 0.8),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  // Style the character name heading
+  h1:first-child {
+    color: var(--deep-red, #8b1a1a);
+    border-bottom: 2px solid var(--gold, #d4af37);
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+  }
+
+  // Style strong labels (Race, Class, etc.)
+  strong {
+    color: var(--deep-red, #8b1a1a);
+    font-weight: 600;
+  }
+}
+
+// Asterion Medieval Fantasy Theme
+// To use: Copy contents to quartz/styles/custom.scss
+
+// Color scheme: earthy tones with gold accents
+:root {
+  // Medieval color palette
+  --parchment: #f4e4c1;
+  --aged-paper: #e8d5b7;
+  --ink: #2c2416;
+  --gold: #d4af37;
+  --deep-red: #8b1a1a;
+  --forest-green: #2d5016;
+}
+
+// Override default colors with medieval palette
+.light {
+  --light: var(--parchment);
+  --lightgray: var(--aged-paper);
+  --darkgray: var(--ink);
+  --secondary: var(--deep-red);
+  --tertiary: var(--gold);
+}
+
+// Decorative borders for main content
+.article-container {
+  border: 3px double var(--gold);
+  padding: 2rem;
+  background: var(--parchment);
+}
+
+// Medieval-style headings
+h1 {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  color: var(--deep-red);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-bottom: 3px double var(--gold);
+  padding-bottom: 0.5rem;
+}
+
+h2 {
+  font-family: 'Cinzel', serif;
+  color: var(--forest-green);
+  border-left: 4px solid var(--gold);
+  padding-left: 1rem;
+}
+
+// Ornate links
+a {
+  color: var(--deep-red);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    color: var(--gold);
+    border-bottom: 2px solid var(--gold);
+  }
+}
+
+// Scroll-like effect for session logs
+.session-log {
+  background: linear-gradient(to bottom, 
+    var(--aged-paper) 0%, 
+    var(--parchment) 10%, 
+    var(--parchment) 90%, 
+    var(--aged-paper) 100%);
+  border-radius: 8px;
+  box-shadow: 
+    0 0 10px rgba(0, 0, 0, 0.1),
+    inset 0 0 50px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+}
+
+// Wax seal effect for tags
+.tag {
+  background: var(--deep-red);
+  color: var(--parchment);
+  border-radius: 50%;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}

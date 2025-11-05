@@ -1,5 +1,9 @@
 {
   "cssTheme": "AnuPpuccin",
   "showRibbon": true,
-  "theme": "moonstone"
+  "theme": "moonstone",
+  "enabledCssSnippets": [
+    "custom",
+    "custom-snippet"
+  ]
 }
