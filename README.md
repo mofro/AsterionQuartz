@@ -48,8 +48,8 @@ This prevents the initial workflow failure and ensures subsequent pushes will de
 ### 4. Clone and Setup
 
 ```bash
-git clone https://github.com/yourusername/your-repo-name.git
-cd your-repo-name
+git clone https://github.com/mofro/AsterionQuartz.git
+cd AsterionQuartz
 
 # Run the interactive setup script
 .\scripts\setup.ps1
@@ -63,7 +63,7 @@ The setup script will:
 
 **Or** configure manually by editing `quartz.config.ts`:
 - Change `pageTitle` to your site name
-- Update `baseUrl` to `yourusername.github.io/your-repo-name`
+- Update `baseUrl` to `mofro.github.io/AsterionQuartz`
 - Customize fonts and colors in the `theme` section
 
 ### 4. Add Your Content
@@ -100,7 +100,7 @@ git push
 
 GitHub Actions will automatically build and deploy your site!
 
-Visit `https://yourusername.github.io/your-repo-name/` in a few minutes to see it live.
+Visit `https://mofro.github.io/AsterionQuartz/` in a few minutes to see it live.
 
 ## Local Development
 
@@ -213,7 +213,7 @@ After initial setup:
 1. ✍️ Write notes in the `obsidian/` folder
 2. 💾 Commit and push to GitHub
 3. 🤖 GitHub Actions automatically builds and deploys
-4. 🌐 View at `https://yourusername.github.io/your-repo-name/`
+4. 🌐 View at `https://mofro.github.io/AsterionQuartz/`
 
 Deployment usually takes 1-2 minutes.
 

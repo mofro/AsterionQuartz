@@ -3,14 +3,18 @@ import * as Plugin from "./quartz/plugins"
 
 const config: QuartzConfig = {
   configuration: {
-    pageTitle: "My Digital Garden",
+    pageTitle: "The Asterion Garden",
     enableSPA: true,
     enablePopovers: true,
     analytics: null,
-    baseUrl: "yourusername.github.io/your-repo-name",
+    baseUrl: "mofro.github.io/AsterionQuartz",
     ignorePatterns: [
       "private",
       ".obsidian",
+      "~/templates",
+      "assets",
+      "dev-notes",
+      ".DS_Store",
       "**/📄 Templates/**",
     ],
     defaultDateType: "created",

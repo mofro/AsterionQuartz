@@ -38,7 +38,9 @@ Write-Host "Copying configuration files..." -ForegroundColor Yellow
 Copy-Item (Join-Path $repoRoot "quartz.config.ts") (Join-Path $quartzPath "quartz.config.ts") -Force
 
 # Start development server
+$port = 8080
+$wsPort = 3002  # Changed from default 3001
 Write-Host "Starting development server..." -ForegroundColor Cyan
-Write-Host "Visit http://localhost:8080 to view your site" -ForegroundColor Green
+Write-Host "Visit http://localhost:$port to view your site" -ForegroundColor Green
 Set-Location $quartzPath
-npx quartz build --serve
+npx quartz build --serve --port $port --wsPort $wsPort
