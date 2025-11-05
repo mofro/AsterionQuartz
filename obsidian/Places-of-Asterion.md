@@ -4,7 +4,7 @@
 ---
 ## General Features
 
-![[Asterion_General_Features.jpg]]
+![[images/Asterion_General_Features.jpg]]
 ## Ancient and Mysterious Sites
 
 ### Carnute Tomb

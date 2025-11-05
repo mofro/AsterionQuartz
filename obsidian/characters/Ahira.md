@@ -11,7 +11,7 @@ class: Warrior
 
 **Race:** Dwarf  
 **Weapon:** [[Artifacts-&-Treasures#Ahira's Warhammer|Warhammer]]  
-**Companion:** [[characters/Puddin|Puddin']] (mastiff)
+**Companion:** [[characters/companions/Puddin|Puddin']] (mastiff)
 
 ## Description
 
