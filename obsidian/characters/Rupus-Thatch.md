@@ -11,7 +11,7 @@ class: Scholar-Mage
 
 **Race:** Human  
 **Class:** Scholar-Mage  
-**Familiar:** [[characters/Quia|Quia]] (Water Nymph)
+**Familiar:** [[characters/companions/Quia|Quia]] (Water Nymph)
 
 ## Description
 A scholar and magic-user with rumpled robes and ink-stained fingers. His arcane knowledge and scholarly mind conceal unexpected depths. Was imprisoned by [[Dramatis-Personae#Hanmer|Hanmer]] for overdue debts.
