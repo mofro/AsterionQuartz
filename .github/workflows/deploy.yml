@@ -54,16 +54,25 @@ jobs:
       - name: Setup custom styles
         run: |
           # Create necessary directories
-          mkdir -p node_modules/@jackyzha0/quartz/styles
+          mkdir -p node_modules/@jackyzha0/quartz/src/styles
           
           # Check if we have custom styles to copy
           if [ -d "quartz/styles" ]; then
             echo "Copying custom styles..."
-            cp -r quartz/styles/* node_modules/@jackyzha0/quartz/styles/
-            echo "Copied styles to node_modules/@jackyzha0/quartz/styles/"
-            ls -la node_modules/@jackyzha0/quartz/styles/
+            # Copy custom styles to the src/styles directory
+            cp -r quartz/styles/* node_modules/@jackyzha0/quartz/src/styles/
+            
+            # Create a main.scss file that imports our custom styles
+            echo '// Main SCSS file that imports custom styles
+            @import "custom";
+            ' > node_modules/@jackyzha0/quartz/src/styles/main.scss
+            
+            echo "Copied styles to node_modules/@jackyzha0/quartz/src/styles/"
+            ls -la node_modules/@jackyzha0/quartz/src/styles/
           else
             echo "Warning: No custom styles directory found at quartz/styles/"
+            # Create a minimal custom.scss file
+            echo '// Custom styles will go here' > node_modules/@jackyzha0/quartz/src/styles/custom.scss
           fi
           
       - name: Create and update Quartz configuration
