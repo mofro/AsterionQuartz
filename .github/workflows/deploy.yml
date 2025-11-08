@@ -36,7 +36,8 @@ jobs:
       - name: Install Quartz dependencies
         run: |
           cd node_modules/@jackyzha0/quartz
-          npm ci
+          # First try npm ci, if that fails, fall back to npm install
+          npm ci || npm install --no-package-lock
 
       - name: Setup Quartz content
         run: |
