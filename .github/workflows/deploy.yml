@@ -70,6 +70,17 @@ jobs:
           echo "Quartz config baseUrl:"
           grep "baseUrl:" node_modules/@jackyzha0/quartz/quartz.config.ts
 
+      - name: Copy custom styles
+        run: |
+          # Create styles directory in Quartz if it doesn't exist
+          mkdir -p node_modules/@jackyzha0/quartz/styles
+          # Copy custom styles
+          cp -r quartz/styles/* node_modules/@jackyzha0/quartz/styles/
+          
+          # Verify the styles were copied
+          echo "Custom styles in Quartz directory:"
+          ls -la node_modules/@jackyzha0/quartz/styles/
+
       - name: Build site
         run: |
           cd node_modules/@jackyzha0/quartz
@@ -77,7 +88,12 @@ jobs:
 
       - name: Copy output
         run: |
-          cp -r node_modules/@jackyzha0/quartz/public ./public
+          # Create the public directory if it doesn't exist
+          mkdir -p public
+          # Copy the built site
+          cp -r node_modules/@jackyzha0/quartz/public/* ./public/
+          # Copy the Images directory
+          cp -r obsidian/Images ./public/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
