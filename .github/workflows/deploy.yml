@@ -83,6 +83,24 @@ jobs:
           # Verify the styles directory exists and has content
           echo "Final styles directory structure:"
           find node_modules/@jackyzha0/quartz/styles -type f | sort || echo "No styles found"
+          
+      - name: Copy Quartz configuration
+        run: |
+          # Ensure the Quartz directory exists
+          mkdir -p node_modules/@jackyzha0/quartz
+          
+          # Copy the quartz.config.ts file
+          if [ -f "quartz.config.ts" ]; then
+            echo "Copying quartz.config.ts..."
+            cp -v quartz.config.ts node_modules/@jackyzha0/quartz/
+            
+            # Verify the file was copied
+            echo "Quartz config file:"
+            ls -la node_modules/@jackyzha0/quartz/quartz.config.ts
+          else
+            echo "Error: quartz.config.ts not found in the root directory"
+            exit 1
+          fi
 
       - name: Update configuration
         run: |
