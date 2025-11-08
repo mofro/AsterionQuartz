@@ -31,13 +31,20 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
-
-      - name: Install Quartz dependencies
         run: |
+          # Install root dependencies
+          npm ci
+          
+          # Install Quartz dependencies
           cd node_modules/@jackyzha0/quartz
-          # First try npm ci, if that fails, fall back to npm install
-          npm ci || npm install --no-package-lock
+          
+          # Install Quartz dependencies using the lockfile if it exists
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            echo "No package-lock.json found in Quartz, using npm install"
+            npm install --no-package-lock
+          fi
 
       - name: Setup Quartz content
         run: |
