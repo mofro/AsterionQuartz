@@ -97,6 +97,8 @@ jobs:
           grep -A 15 "emitters:" quartz.config.ts | grep -v "^\s*//" | head -n 15
 
       - name: Build site
+        env:
+          BASE_URL: "${{ github.event.repository.name }}"
         run: |
           cd node_modules/@jackyzha0/quartz
           
