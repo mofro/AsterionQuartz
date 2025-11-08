@@ -203,10 +203,21 @@ jobs:
           echo "Build output:"
           ls -la public/
 
+      - name: Move build output to root
+        run: |
+          # Move the built files to the root of the workspace
+          mv node_modules/@jackyzha0/quartz/public/* .
+          # Ensure .nojekyll is present (for SPA routing)
+          touch .nojekyll
+          
+          # Verify the files were moved
+          echo "Current directory structure:"
+          ls -la
+          
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: node_modules/@jackyzha0/quartz/public
+          path: .
 
   deploy:
     needs: build
