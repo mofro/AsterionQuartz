@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'  # Quartz requires Node.js >= 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -77,42 +77,19 @@ jobs:
           
       - name: Update Quartz configuration
         run: |
-          # Ensure the Quartz directory exists
-          mkdir -p node_modules/@jackyzha0/quartz
+          cd node_modules/@jackyzha0/quartz
           
-          # Backup the original config
-          cp node_modules/@jackyzha0/quartz/quartz.config.ts quartz.config.original
+          # Update just the baseUrl in the config (matching the exact format)
+          sed -i 's|baseUrl: "[^"]*"|baseUrl: "${{ github.event.repository.name }}"|' quartz.config.ts
           
-          # Create a minimal config that imports and re-exports the default config
-          # This allows us to override just the baseUrl while keeping all other settings
-          cat > quartz.config.ts << 'EOL'
-          import userConfig from "./quartz.config.original"
-          
-          const config = {
-            ...userConfig,
-            configuration: {
-              ...userConfig.configuration,
-              baseUrl: process.env.BASE_URL || userConfig.configuration.baseUrl,
-            },
-          }
-          
-          export default config
-          EOL
-          
-          # Move the config to the Quartz directory
-          mv quartz.config.ts node_modules/@jackyzha0/quartz/
-          
-          # Verify the config was created
+          # Verify the config was updated
           echo "Updated Quartz configuration:"
-          echo "Base URL: ${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          grep -A 3 "baseUrl" quartz.config.ts
           
-          # Show the active emitters from the original config
           echo "\nActive emitters:"
-          grep -A 15 "emitters:" node_modules/@jackyzha0/quartz/quartz.config.original | grep -v "^\s*//" | head -n 15
+          grep -A 15 "emitters:" quartz.config.ts | grep -v "^\s*//" | head -n 15
 
       - name: Build site
-        env:
-          BASE_URL: "${{ github.event.repository.name }}"
         run: |
           cd node_modules/@jackyzha0/quartz
           
