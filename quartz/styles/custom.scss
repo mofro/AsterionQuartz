@@ -1,9 +1,8 @@
 // Override responsive breakpoint to 1400px (default is 1510px)
 $fullPageWidth: 1400px;
 
-@use "./base.scss";
-
-// put your custom CSS here!
+// Custom styles go here
+// These will be applied after all default Quartz styles
 
 // Ensure right column components stack vertically
 .right {

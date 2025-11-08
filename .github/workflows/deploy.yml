@@ -51,9 +51,6 @@ jobs:
           echo "Content directory structure:"
           ls -la node_modules/@jackyzha0/quartz/content/
 
-      - name: Install SASS for SCSS processing
-        run: npm install -g sass
-
       - name: Setup custom styles
         run: |
           # Create necessary directories
@@ -61,37 +58,13 @@ jobs:
           
           # Check if we have custom styles to copy
           if [ -d "quartz/styles" ]; then
-            echo "Processing custom styles..."
-            
-            # Copy all styles to the styles directory
+            echo "Copying custom styles..."
             cp -r quartz/styles/* node_modules/@jackyzha0/quartz/styles/
-            
-            # Process SCSS files
-            echo "Compiling SCSS files..."
-            find node_modules/@jackyzha0/quartz/styles -name '*.scss' | while read -r file; do
-              filename=$(basename "$file" .scss)
-              sass "$file" "node_modules/@jackyzha0/quartz/styles/$filename.css"
-            done
-            
-            # Create a main.css that imports all custom styles
-            echo "/* Main CSS file that imports all custom styles */" > node_modules/@jackyzha0/quartz/styles/main.css
-            find node_modules/@jackyzha0/quartz/styles -maxdepth 1 -name '*.css' ! -name 'main.css' | while read -r file; do
-              filename=$(basename "$file")
-              echo "@import './$filename';" >> node_modules/@jackyzha0/quartz/styles/main.css
-            done
-            
-            # Verify the files were processed
-            echo "Processed styles in styles directory:"
+            echo "Copied styles to node_modules/@jackyzha0/quartz/styles/"
             ls -la node_modules/@jackyzha0/quartz/styles/
           else
             echo "Warning: No custom styles directory found at quartz/styles/"
-            # Create a basic custom.css
-            echo "/* Custom styles will be included here */" > node_modules/@jackyzha0/quartz/styles/custom.css
           fi
-          
-          # Verify the styles were processed
-          echo "Final styles in styles directory:"
-          find node_modules/@jackyzha0/quartz/styles -type f | sort || echo "No styles found"
           
       - name: Create and update Quartz configuration
         run: |
