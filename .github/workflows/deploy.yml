@@ -48,28 +48,19 @@ jobs:
 
       - name: Setup Quartz content
         run: |
-          # Create content directory in Quartz
+          # Create content and styles directories in Quartz
           mkdir -p node_modules/@jackyzha0/quartz/content
+          mkdir -p node_modules/@jackyzha0/quartz/src/styles
           
           # Copy content from obsidian to Quartz content directory
           cp -r obsidian/* node_modules/@jackyzha0/quartz/content/
           
-          # Verify content was copied
-          echo "Content directory structure:"
-          ls -la node_modules/@jackyzha0/quartz/content/
-
-      - name: Setup custom styles
-        run: |
-          # Create necessary directories
-          mkdir -p node_modules/@jackyzha0/quartz/src/styles
-          
-          # Check if we have custom styles to copy
+          # Copy custom styles if they exist
           if [ -d "quartz/styles" ]; then
             echo "Copying custom styles..."
-            # Copy custom styles to the src/styles directory
             cp -r quartz/styles/* node_modules/@jackyzha0/quartz/src/styles/
             
-            # Create a main.scss file that imports our custom styles
+            # Create a main.scss that imports our custom styles
             echo '// Main SCSS file that imports custom styles
             @import "custom";
             ' > node_modules/@jackyzha0/quartz/src/styles/main.scss
@@ -78,8 +69,6 @@ jobs:
             ls -la node_modules/@jackyzha0/quartz/src/styles/
           else
             echo "Warning: No custom styles directory found at quartz/styles/"
-            # Create a minimal custom.scss file
-            echo '// Custom styles will go here' > node_modules/@jackyzha0/quartz/src/styles/custom.scss
           fi
           
       - name: Update Quartz configuration
@@ -110,27 +99,9 @@ jobs:
           echo "Build output:"
           ls -la public/
           
-          # Copy processed styles to the public directory
-          if [ -d "node_modules/@jackyzha0/quartz/styles" ]; then
-            echo "Copying processed styles to public directory..."
-            mkdir -p public/css
-            find node_modules/@jackyzha0/quartz/styles -name '*.css' -exec cp {} public/css/ \;
-            echo "Copied styles to public/css/:"
-            ls -la public/css/
-            
-            # Add link to custom styles in the HTML head
-            if [ -f "public/index.html" ]; then
-              echo "Adding custom styles to index.html..."
-              
-              # Use sed to insert the styles before the closing head tag
-              sed -i.bak 's|</head>|  <link href="/css/main.css" rel="stylesheet" />\n  <link href="/css/custom.css" rel="stylesheet" />\n  <link href="/css/custom-snippet.css" rel="stylesheet" />\n</head>|' public/index.html
-              
-              # Clean up backup file
-              rm -f public/index.html.bak
-              
-              echo "Updated index.html with custom styles"
-            fi
-          fi
+          # Verify build output
+          echo "Build output:"
+          ls -la public/
 
       - name: Move build output to root
         run: |
