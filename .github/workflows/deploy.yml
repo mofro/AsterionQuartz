@@ -75,119 +75,49 @@ jobs:
             echo '// Custom styles will go here' > node_modules/@jackyzha0/quartz/src/styles/custom.scss
           fi
           
-      - name: Create and update Quartz configuration
+      - name: Update Quartz configuration
         run: |
           # Ensure the Quartz directory exists
           mkdir -p node_modules/@jackyzha0/quartz
           
-          # Generate a clean config file
-          cat > node_modules/@jackyzha0/quartz/quartz.config.ts << 'EOL'
-          import { QuartzConfig } from "./quartz/cfg"
-          import * as Plugin from "./quartz/plugins"
+          # Backup the original config
+          cp node_modules/@jackyzha0/quartz/quartz.config.ts quartz.config.original
           
-          const config: QuartzConfig = {
+          # Create a minimal config that imports and re-exports the default config
+          # This allows us to override just the baseUrl while keeping all other settings
+          cat > quartz.config.ts << 'EOL'
+          import userConfig from "./quartz.config.original"
+          
+          const config = {
+            ...userConfig,
             configuration: {
-              pageTitle: "The Asterion Garden",
-              enableSPA: true,
-              enablePopovers: true,
-              analytics: null,
-              baseUrl: "${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}",
-              ignorePatterns: [
-                "private",
-                ".obsidian",
-                "~/templates",
-                "assets",
-                "dev-notes",
-                ".DS_Store",
-                "**/📄 Templates/**",
-              ],
-              defaultDateType: "created",
-              theme: {
-                fontOrigin: "googleFonts",
-                cdnCaching: true,
-                typography: {
-                  header: "Schibsted Grotesk",
-                  body: "Source Sans Pro",
-                  code: "IBM Plex Mono",
-                },
-                colors: {
-                  lightMode: {
-                    light: "#faf8f8",
-                    lightgray: "#e5e5e5",
-                    gray: "#b8b8b8",
-                    darkgray: "#4e4e4e",
-                    dark: "#2b2b2b",
-                    secondary: "#284b63",
-                    tertiary: "#84a59d",
-                    highlight: "rgba(143, 159, 169, 0.15)",
-                    textHighlight: "#fff23688",
-                  },
-                  darkMode: {
-                    light: "#161618",
-                    lightgray: "#393639",
-                    gray: "#646464",
-                    darkgray: "#d4d4d4",
-                    dark: "#ebebec",
-                    secondary: "#7b97aa",
-                    tertiary: "#84a59d",
-                    highlight: "rgba(143, 159, 169, 0.15)",
-                    textHighlight: "#b3aa0288",
-                  },
-                },
-              },
-              locale: "en-US",
-            },
-            plugins: {
-              transformers: [
-                Plugin.FrontMatter(),
-                Plugin.CreatedModifiedDate(),
-                Plugin.SyntaxHighlighting(),
-                Plugin.ObsidianFlavoredMarkdown(),
-                Plugin.GitHubFlavoredMarkdown(),
-                Plugin.TableOfContents(),
-                Plugin.CrawlLinks(),
-                Plugin.Description(),
-                Plugin.Latex(),
-              ],
-              filters: [
-                Plugin.RemoveDrafts(),
-              ],
-              emitters: [
-                Plugin.AliasRedirects(),
-                Plugin.ComponentResources(),
-                Plugin.ContentPage(),
-                Plugin.FolderPage(),
-                Plugin.TagPage(),
-                Plugin.ContentIndex(),
-                Plugin.Assets(),
-                Plugin.Static(),
-                Plugin.NotFoundPage(),
-              ],
+              ...userConfig.configuration,
+              baseUrl: process.env.BASE_URL || userConfig.configuration.baseUrl,
             },
           }
           
           export default config
           EOL
           
-          # Verify the file was created
-          echo "Generated Quartz config file:"
-          cat node_modules/@jackyzha0/quartz/quartz.config.ts
+          # Move the config to the Quartz directory
+          mv quartz.config.ts node_modules/@jackyzha0/quartz/
           
-          echo "\nConfiguration updated with baseUrl: ${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          # Verify the config was created
+          echo "Updated Quartz configuration:"
+          echo "Base URL: ${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
           
-          # Copy config to Quartz
-          cp quartz.config.ts node_modules/@jackyzha0/quartz/
-          
-          # Verify config
-          echo "Updated configuration:"
-          grep "baseUrl" node_modules/@jackyzha0/quartz/quartz.config.ts
+          # Show the active emitters from the original config
+          echo "\nActive emitters:"
+          grep -A 15 "emitters:" node_modules/@jackyzha0/quartz/quartz.config.original | grep -v "^\s*//" | head -n 15
 
       - name: Build site
+        env:
+          BASE_URL: "${{ github.event.repository.name }}"
         run: |
           cd node_modules/@jackyzha0/quartz
           
-          # Build the site
-          echo "Building site..."
+          # Build the site with the custom base URL
+          echo "Building site with BASE_URL: $BASE_URL"
           npx quartz build --verbose
           
           # Verify build output
