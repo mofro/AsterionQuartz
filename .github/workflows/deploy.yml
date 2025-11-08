@@ -121,17 +121,12 @@ jobs:
             # Add link to custom styles in the HTML head
             if [ -f "public/index.html" ]; then
               echo "Adding custom styles to index.html..."
-              # Create a temporary file with the new head content
-              cat > public/head.html << 'EOL'
-              <link href="/css/main.css" rel="stylesheet" />
-              <link href="/css/custom.css" rel="stylesheet" />
-              <link href="/css/custom-snippet.css" rel="stylesheet" />
-              </head>
-              EOL
               
-              # Insert the new styles before the closing head tag
-              sed -i.bak '/<\/head>/e cat public/head.html' public/index.html
-              rm public/head.html public/index.html.bak
+              # Use sed to insert the styles before the closing head tag
+              sed -i.bak 's|</head>|  <link href="/css/main.css" rel="stylesheet" />\n  <link href="/css/custom.css" rel="stylesheet" />\n  <link href="/css/custom-snippet.css" rel="stylesheet" />\n</head>|' public/index.html
+              
+              # Clean up backup file
+              rm -f public/index.html.bak
               
               echo "Updated index.html with custom styles"
             fi
