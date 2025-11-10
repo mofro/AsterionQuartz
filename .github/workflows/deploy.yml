@@ -37,23 +37,20 @@ jobs:
 
       - name: Setup Quartz content and styles
         run: |
-          # Check if content is a symlink
-          if [ -L "content" ]; then
-            echo "Content is a symlink, using as-is..."
-            # Ensure the symlink target exists
-            if [ ! -e "content" ]; then
-              echo "Error: Symlink target does not exist"
-              exit 1
-            fi
-          elif [ -d "content" ]; then
-            # Content is a regular directory, sync with obsidian
-            echo "Content is a directory, syncing with Obsidian..."
-            rsync -a --delete obsidian/ content/ || echo "Warning: Failed to sync Obsidian content"
-          else
-            # Content doesn't exist, create directory and copy content
-            echo "Creating content directory and copying Obsidian content..."
+          # Remove any broken symlinks
+          if [ -L "content" ] && [ ! -e "content" ]; then
+            echo "Removing broken symlink..."
+            rm content
+          fi
+          
+          # If content doesn't exist, create it and copy from obsidian
+          if [ ! -e "content" ]; then
+            echo "Creating content directory and copying from obsidian..."
             mkdir -p content
             cp -r obsidian/* content/ || true
+          elif [ -d "content" ]; then
+            echo "Content directory exists, syncing with obsidian..."
+            rsync -a --delete obsidian/ content/ || true
           fi
           
           # Ensure static directory exists
