@@ -1,3 +1,6 @@
+@use "./base.scss";
+
+// put your custom CSS here!
 // Override responsive breakpoint to 1400px (default is 1510px)
 $fullPageWidth: 1400px;
 
@@ -20,27 +23,43 @@ $fullPageWidth: 1400px;
   }
 }
 
-[saved-theme='dark'] body {
-   background:
-        /* top, transparent black, faked with gradient */ 
-        linear-gradient(
-          rgba(0, 0, 0, 0.75), 
-          rgba(0, 0, 0, 0.95)
-        ),
-        /* bottom, image */
-        url("/Images/paper-texture-top-view.jpg")
-        fixed;
+// In custom.scss
+.logo {
+  height: 15rem; // Adjust as needed
+  width: auto;
 }
-[saved-theme='light'] body {
-     background:
-        /* top, transparent black, faked with gradient */ 
-        linear-gradient(
-          rgba(255, 255, 255, 0.5), 
-          rgba(255, 255, 255, 0.25)
-        ),
-        /* bottom, image */
-        url("/Images/paper-texture-top-view-2.jpg")
-        fixed;
+.logo-text {
+  display: none;
+}
+
+// Dark theme
+.dark {
+  body {
+    background:
+      /* top, transparent black, faked with gradient */ 
+      linear-gradient(
+        rgba(0, 0, 0, 0.75), 
+        rgba(0, 0, 0, 0.95)
+      ),
+      /* bottom, image */
+      url("/static/images/paper-texture-top-view.jpg")
+      fixed;
+  }
+}
+
+// Light theme
+:root, .light {
+  body {
+    background:
+      /* top, transparent black, faked with gradient */ 
+      linear-gradient(
+        rgba(255, 255, 255, 0.5), 
+        rgba(255, 255, 255, 0.25)
+      ),
+      /* bottom, image */
+      url("/static/images/paper-texture-top-view-2.jpg")
+      fixed;
+  }
 }
 
 // Spacing for Darkmode + Search row

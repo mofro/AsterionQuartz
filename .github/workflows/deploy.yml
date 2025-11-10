@@ -46,30 +46,62 @@ jobs:
             npm install --no-package-lock
           fi
 
-      - name: Setup Quartz content
+      - name: Setup Quartz content and styles
         run: |
-          # Create content and styles directories in Quartz
+          # Create content directory in Quartz
           mkdir -p node_modules/@jackyzha0/quartz/content
-          mkdir -p node_modules/@jackyzha0/quartz/src/styles
           
           # Copy content from obsidian to Quartz content directory
           cp -r obsidian/* node_modules/@jackyzha0/quartz/content/
           
-          # Copy custom styles if they exist
-          if [ -d "quartz/styles" ]; then
-            echo "Copying custom styles..."
-            cp -r quartz/styles/* node_modules/@jackyzha0/quartz/src/styles/
-            
-            # Create a main.scss that imports our custom styles
-            echo '// Main SCSS file that imports custom styles
-            @import "custom";
-            ' > node_modules/@jackyzha0/quartz/src/styles/main.scss
-            
-            echo "Copied styles to node_modules/@jackyzha0/quartz/src/styles/"
-            ls -la node_modules/@jackyzha0/quartz/src/styles/
+          # Create static directory for custom CSS
+          mkdir -p node_modules/@jackyzha0/quartz/static/css
+          
+          # Compile SCSS to CSS if needed
+          if [ -f "quartz/styles/custom.scss" ]; then
+            echo "Compiling custom SCSS to CSS..."
+            sass quartz/styles/custom.scss node_modules/@jackyzha0/quartz/static/css/custom.css
+          elif [ -f "quartz/styles/custom.css" ]; then
+            cp quartz/styles/custom.css node_modules/@jackyzha0/quartz/static/css/
           else
-            echo "Warning: No custom styles directory found at quartz/styles/"
+            # Create a minimal custom CSS file if none exists
+            echo '/* Custom CSS */
+            body { background-color: #f8f9fa; }
+            ' > node_modules/@jackyzha0/quartz/static/css/custom.css
           fi
+          
+          # Create a simple plugin to inject our CSS
+          mkdir -p node_modules/@jackyzha0/quartz/quartz/plugins/custom
+          echo 'import { QuartzTransformerPlugin } from "../types"
+          
+          export const CustomCSS: QuartzTransformerPlugin = () => ({
+            name: "CustomCSS",
+            htmlPlugins() {
+              return [
+                () => (tree: any) => {
+                  const head = tree.children.find((child: any) => 
+                    child.type === "element" && child.tagName === "head"
+                  )
+                  
+                  if (head) {
+                    head.children.push({
+                      type: "element",
+                      tagName: "link",
+                      properties: {
+                        rel: "stylesheet",
+                        href: "/css/custom.css"
+                      },
+                      children: []
+                    })
+                  }
+                }
+              ]
+            }
+          })' > node_modules/@jackyzha0/quartz/quartz/plugins/custom/css.ts
+          
+          # Update the config to include our custom plugin
+          sed -i "s/transformers: \[/transformers: [\n      CustomCSS(),/" node_modules/@jackyzha0/quartz/quartz.config.ts
+          sed -i "s/import { QuartzConfig } from ".\/quartz\/cfg"/import { QuartzConfig } from ".\/quartz\/cfg"\nimport { CustomCSS } from ".\/quartz\/plugins\/custom\/css"/" node_modules/@jackyzha0/quartz/quartz.config.ts
           
       - name: Update Quartz configuration
         run: |
@@ -99,9 +131,35 @@ jobs:
           echo "Build output:"
           ls -la public/
           
-          # Verify build output
-          echo "Build output:"
-          ls -la public/
+          # Copy custom styles to the public directory
+          if [ -d "src/styles" ]; then
+            echo "Copying custom styles to public directory..."
+            mkdir -p public/css
+            
+            # Compile SCSS to CSS
+            if command -v sass &> /dev/null; then
+              for scss_file in src/styles/*.scss; do
+                if [ -f "$scss_file" ]; then
+                  css_file="public/css/$(basename "$scss_file" .scss).css"
+                  echo "Compiling $scss_file to $css_file"
+                  sass "$scss_file" "$css_file"
+                fi
+              done
+              
+              # Add link to custom styles in the HTML head
+              if [ -f "public/index.html" ]; then
+                echo "Adding custom styles to index.html..."
+                STYLES_LINK='<link href="/css/custom.css" rel="stylesheet" />' 
+                sed -i.bak "s|</head>|$STYLES_LINK\n</head>|" public/index.html
+                rm -f public/index.html.bak
+                echo "Updated index.html with custom styles"
+              fi
+            else
+              echo "Warning: sass command not found. Skipping SCSS compilation."
+            fi
+          else
+            echo "Warning: No src/styles directory found. Skipping custom styles."
+          fi
 
       - name: Move build output to root
         run: |

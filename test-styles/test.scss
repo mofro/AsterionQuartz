@@ -1,9 +1,0 @@
-// Test SCSS file
-@use "@jackyzha0/quartz/src/styles/base";
-
-body {
-  background-color: base.$light-bg;
-  color: base.$dark;
-  max-width: 1400px;
-  margin: 0 auto;
-}
