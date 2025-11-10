@@ -102,86 +102,54 @@ jobs:
           sed -i 's|baseUrl: "[^"]*"|baseUrl: "${{ github.event.repository.name }}"|' quartz.config.ts
           
           # Verify the config was updated
-          echo "Updated Quartz configuration:"
-          grep -A 3 "baseUrl" quartz.config.ts
-          
-          echo "\nActive emitters:"
-          grep -A 15 "emitters:" quartz.config.ts | grep -v "^\s*//" | head -n 15
 
-      - name: Build site
+      - name: Build and prepare site
         env:
           BASE_URL: "${{ github.event.repository.name }}"
         run: |
-          # Build the site with the custom base directory
-          echo "Building site with base directory: $BASE_URL"
+          set -e  # Exit on error
+          
+          # 1. Build the site
+          echo "🚀 Building site with base directory: $BASE_URL"
           npx quartz build --baseDir "$BASE_URL" --verbose
           
-          # Verify build output
-          echo "Build output:"
-          ls -la public/
-          
-          # Copy custom styles to the public directory
+          # 2. Handle custom styles if they exist
           if [ -d "src/styles" ]; then
-            echo "Copying custom styles to public directory..."
+            echo "🎨 Processing custom styles..."
             mkdir -p public/css
             
-            # Compile SCSS to CSS
-            if command -v sass &> /dev/null; then
-              for scss_file in src/styles/*.scss; do
-                if [ -f "$scss_file" ]; then
-                  css_file="public/css/$(basename "$scss_file" .scss).css"
-                  echo "Compiling $scss_file to $css_file"
-                  sass "$scss_file" "$css_file"
-                fi
-              done
+            # Compile SCSS if sass is available
+            if command -v sass >/dev/null 2>&1; then
+              sass "src/styles/:"public/css/"
               
               # Add link to custom styles in the HTML head
               if [ -f "public/index.html" ]; then
-                echo "Adding custom styles to index.html..."
-                STYLES_LINK='<link href="/css/custom.css" rel="stylesheet" />' 
-                sed -i.bak "s|</head>|$STYLES_LINK\n</head>|" public/index.html
+                echo "📝 Adding custom styles to index.html..."
+                sed -i.bak '
+                  /<head>/ {
+                    a\    <link href="/css/custom.css" rel="stylesheet" />
+                  }' public/index.html
                 rm -f public/index.html.bak
-                echo "Updated index.html with custom styles"
               fi
             else
-              echo "Warning: sass command not found. Skipping SCSS compilation."
+              echo "⚠️  sass command not found. Skipping SCSS compilation."
             fi
-          else
-            echo "Warning: No src/styles directory found. Skipping custom styles."
           fi
+          
+          # 3. Prepare for deployment
+          echo "📦 Preparing for deployment..."
+          
+          # Ensure .nojekyll is present for SPA routing
+          touch public/.nojekyll
+          
+          # Verify build output
+          echo "📂 Build output:"
+          ls -la public/
 
-      - name: Prepare for deployment
-        run: |
-          # Check where the build output is located
-          echo "Build output directory structure:"
-          find . -name public -type d -ls || true
-          
-          # Move built files to the root
-          if [ -d "public" ]; then
-            echo "Moving files from public/ to root directory..."
-            mv public/* .
-            mv public/.* . 2>/dev/null || true  # Ignore errors for . and ..
-            rmdir public
-          elif [ -d "node_modules/@jackyzha0/quartz/public" ]; then
-            echo "Moving files from node_modules/@jackyzha0/quartz/public/ to root directory..."
-            mv node_modules/@jackyzha0/quartz/public/* .
-          else
-            echo "Error: Could not find build output directory"
-            find . -type d | grep -v node_modules
-            exit 1
-          fi
-          
-          # Ensure .nojekyll is present (for SPA routing)
-          touch .nojekyll
-          
-          # Verify the files were moved
-          echo "Current directory structure:"
-          ls -la
-          
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: public/
 
   deploy:
     needs: build
