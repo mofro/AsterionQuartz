@@ -93,8 +93,8 @@ jobs:
           })' > quartz/plugins/custom/css.ts
           
           # Update the config to include our custom plugin
-          sed -i "s/transformers: \[/transformers: [\n      CustomCSS(),/" quartz.config.ts
-          sed -i "s/import { QuartzConfig } from ".\/quartz\/cfg"/import { QuartzConfig } from ".\/quartz\/cfg"\nimport { CustomCSS } from ".\/quartz\/plugins\/custom\/css"/" quartz.config.ts
+          sed -i 's/transformers: \[/transformers: [\n      CustomCSS(),/' quartz.config.ts
+          sed -i 's|import { QuartzConfig } from "./quartz/cfg"|import { QuartzConfig } from "./quartz/cfg"\nimport { CustomCSS } from "./quartz/plugins/custom/css"|' quartz.config.ts
           
       - name: Update Quartz configuration
         run: |
