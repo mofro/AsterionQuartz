@@ -112,9 +112,9 @@ jobs:
         env:
           BASE_URL: "${{ github.event.repository.name }}"
         run: |
-          # Build the site with the custom base URL
-          echo "Building site with BASE_URL: $BASE_URL"
-          npx quartz build --baseUrl "$BASE_URL" --verbose
+          # Build the site with the custom base directory
+          echo "Building site with base directory: $BASE_URL"
+          npx quartz build --baseDir "$BASE_URL" --verbose
           
           # Verify build output
           echo "Build output:"
