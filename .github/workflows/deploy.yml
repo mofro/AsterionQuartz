@@ -65,26 +65,41 @@ jobs:
           echo "[STATUS] Content directory status:"
           ls -la content/ 2>/dev/null || echo "  (empty)"
           
-          # 2. Ensure static assets are in the right place
-          echo "Setting up static assets..."
-          mkdir -p static
+          # 2. Set up static assets directory structure
+          echo "[SETUP] Preparing static assets..."
           
-          # Copy assets from obsidian if they exist
+          # Create necessary directories
+          mkdir -p static public/static
+          
+          # 3. Copy static assets from multiple possible locations
+          echo "[COPY] Looking for static assets..."
+          
+          # Check and copy from obsidian/assets
           if [ -d "obsidian/assets" ]; then
-            echo "Copying assets from obsidian..."
+            echo "[COPY] Copying assets from obsidian/assets/..."
             cp -r obsidian/assets/* static/ 2>/dev/null || true
           fi
           
-          # 3. Handle custom styles
-          echo "Setting up styles..."
-          mkdir -p static/styles
+          # Check and copy from root static/ directory
+          if [ -d "static" ]; then
+            echo "[COPY] Copying existing static/ contents..."
+            cp -r static/* public/static/ 2>/dev/null || true
+          fi
+          
+          # 4. Handle custom styles
+          echo "[STYLES] Setting up styles..."
+          mkdir -p public/static/styles
           
           if [ -f "custom.scss" ]; then
-            echo "Using custom.scss..."
-            cp custom.scss static/styles/
+            echo "[STYLES] Using custom.scss..."
+            cp custom.scss public/static/styles/
           else
-            echo "No custom.scss found, using default styles"
+            echo "[STYLES] No custom.scss found, using default styles"
           fi
+          
+          # 5. Verify static assets were copied
+          echo "[VERIFY] Static assets in public/static:"
+          ls -la public/static/ 2>/dev/null || echo "  (no static assets found)"
           
           # 4. Verify directory structure
           echo "Final directory structure:"
