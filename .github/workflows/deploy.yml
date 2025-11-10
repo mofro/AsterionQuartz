@@ -125,10 +125,7 @@ jobs:
               # Add link to custom styles in the HTML head
               if [ -f "public/index.html" ]; then
                 echo "📝 Adding custom styles to index.html..."
-                sed -i.bak '
-                  /<head>/ {
-                    a\    <link href="/css/custom.css" rel="stylesheet" />
-                  }' public/index.html
+                sed -i.bak '/<head>/a\    <link href="/css/custom.css" rel="stylesheet" />' public/index.html
                 rm -f public/index.html.bak
               fi
             else
