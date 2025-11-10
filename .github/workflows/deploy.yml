@@ -134,7 +134,14 @@ jobs:
             fi
           fi
           
-          # 3. Prepare for deployment
+          # 3. Copy static assets if they exist
+          if [ -d "static" ]; then
+            echo "📁 Copying static assets..."
+            mkdir -p public/static
+            cp -r static/* public/static/ 2>/dev/null || true
+          fi
+          
+          # 4. Prepare for deployment
           echo "📦 Preparing for deployment..."
           
           # Ensure .nojekyll is present for SPA routing
@@ -143,6 +150,8 @@ jobs:
           # Verify build output
           echo "📂 Build output:"
           ls -la public/
+          echo "📁 Static assets:"
+          ls -la public/static/ || echo "No static assets found"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

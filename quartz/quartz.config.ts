@@ -16,7 +16,8 @@ const config: QuartzConfig = {
       "private",
       ".obsidian",
       "templates",
-      "assets",
+      "assets/.obsidian",  // Only ignore Obsidian-specific files in assets
+      "assets/templates",  // Only ignore templates in assets
       "dev-notes",
       ".DS_Store",
       "**/📄 Templates/**",
