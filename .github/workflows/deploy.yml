@@ -150,10 +150,27 @@ jobs:
             echo "Warning: No src/styles directory found. Skipping custom styles."
           fi
 
-      - name: Move build output to root
+      - name: Prepare for deployment
         run: |
-          # Move the built files to the root of the workspace
-          mv node_modules/@jackyzha0/quartz/public/* .
+          # Check where the build output is located
+          echo "Build output directory structure:"
+          find . -name public -type d -ls || true
+          
+          # Move built files to the root
+          if [ -d "public" ]; then
+            echo "Moving files from public/ to root directory..."
+            mv public/* .
+            mv public/.* . 2>/dev/null || true  # Ignore errors for . and ..
+            rmdir public
+          elif [ -d "node_modules/@jackyzha0/quartz/public" ]; then
+            echo "Moving files from node_modules/@jackyzha0/quartz/public/ to root directory..."
+            mv node_modules/@jackyzha0/quartz/public/* .
+          else
+            echo "Error: Could not find build output directory"
+            find . -type d | grep -v node_modules
+            exit 1
+          fi
+          
           # Ensure .nojekyll is present (for SPA routing)
           touch .nojekyll
           
