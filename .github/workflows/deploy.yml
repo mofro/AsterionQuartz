@@ -37,17 +37,25 @@ jobs:
 
       - name: Setup Quartz content and styles
         run: |
-          # Create content directory if it doesn't exist
-          mkdir -p content
+          # Ensure content directory exists and sync Obsidian content
+          if [ -d "content" ]; then
+            echo "Content directory already exists, syncing with Obsidian..."
+            rsync -a --delete obsidian/ content/ || true
+          else
+            echo "Creating content directory and copying Obsidian content..."
+            mkdir -p content
+            cp -r obsidian/* content/ || true
+          fi
           
-          # Copy content from obsidian to content directory
-          cp -r obsidian/* content/ || true
-          
-          # Create static directory for custom CSS if it doesn't exist
+          # Ensure static directory exists
           mkdir -p static/styles
           
           # Copy custom SCSS file if it exists
-          cp custom.scss static/styles/ || true
+          if [ -f "custom.scss" ]; then
+            cp custom.scss static/styles/ || true
+          else
+            echo "No custom.scss found, using default styles"
+          fi
           
           # Create a simple plugin to inject our CSS
           mkdir -p quartz/plugins/custom
