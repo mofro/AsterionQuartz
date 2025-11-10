@@ -12,11 +12,11 @@ $fullPageWidth: 1400px;
   display: flex;
   flex-direction: column;
   gap: 2rem; // Add some spacing between components
-  
-  > * {
+
+  >* {
     width: 100%;
     margin-bottom: 1.5rem;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
@@ -28,6 +28,7 @@ $fullPageWidth: 1400px;
   height: 15rem; // Adjust as needed
   width: auto;
 }
+
 .logo-text {
   display: none;
 }
@@ -36,29 +37,28 @@ $fullPageWidth: 1400px;
 .dark {
   body {
     background:
-      /* top, transparent black, faked with gradient */ 
-      linear-gradient(
-        rgba(0, 0, 0, 0.75), 
-        rgba(0, 0, 0, 0.95)
-      ),
+      /* top, transparent black, faked with gradient */
+      linear-gradient(rgba(0, 0, 0, 0.745),
+        rgba(0, 0, 0, 0.95)),
       /* bottom, image */
-      url("/static/images/paper-texture-top-view.jpg"),
+      url("/images/paper-texture-top-view.jpg"),
       fixed;
+    background-size: cover;
   }
 }
 
 // Light theme
-:root, .light {
+:root,
+.light {
   body {
     background:
-      /* top, transparent black, faked with gradient */ 
-      linear-gradient(
-        rgba(255, 255, 255, 0.15), 
-        rgba(255, 255, 255, 0.20)
-      ),
+      /* top, transparent black, faked with gradient */
+      linear-gradient(rgba(214, 201, 160, 0.5),
+        rgba(140, 125, 99, 0.5)),
       /* bottom, image */
-      url("/static/images/paper-texture-top-view-2.jpg"),
+      url("/images/paper-texture-top-view.jpg"),
       fixed;
+
   }
 }
 
@@ -87,19 +87,17 @@ h2.anchor-only {
   border-radius: 8px;
   padding: 1.5rem;
   margin: 1.5rem 0;
-  background: linear-gradient(
-    135deg,
-    rgba(244, 228, 193, 0.8) 0%,
-    rgba(232, 213, 183, 0.2) 100%
-  );
-  box-shadow: 
+  background: linear-gradient(135deg,
+      rgba(244, 228, 193, 0.8) 0%,
+      rgba(232, 213, 183, 0.2) 100%);
+  box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 
+    box-shadow:
       0 4px 12px rgba(0, 0, 0, 0.8),
       inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
@@ -172,7 +170,7 @@ a {
   text-decoration: none;
   border-bottom: 1px solid var(--gold);
   transition: all 0.3s ease;
-  
+
   &:hover {
     color: var(--gold);
     border-bottom: 2px solid var(--gold);
@@ -181,13 +179,13 @@ a {
 
 // Scroll-like effect for session logs
 .session-log {
-  background: linear-gradient(to bottom, 
-    var(--aged-paper) 0%, 
-    var(--parchment) 10%, 
-    var(--parchment) 90%, 
-    var(--aged-paper) 100%);
+  background: linear-gradient(to bottom,
+      var(--aged-paper) 0%,
+      var(--parchment) 10%,
+      var(--parchment) 90%,
+      var(--aged-paper) 100%);
   border-radius: 8px;
-  box-shadow: 
+  box-shadow:
     0 0 10px rgba(0, 0, 0, 0.1),
     inset 0 0 50px rgba(0, 0, 0, 0.05);
   padding: 2rem;
@@ -203,25 +201,26 @@ a {
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
+
 /* Drop cap styling */
 /* Drop cap for first paragraph under Description heading */
-article h2#description + p:first-letter {
-    float: left;
-    color: #8b0000;
-    background: rgba(250, 240, 229, 0.64);
-    border: 1.5px solid rgb(149, 88, 28);
-    margin-right: .2em;
-    padding: .1em .1em 0 0;
-    font-family: UnifrakturMaguntia, cursive;
-    font-size: 2.5em;
-    line-height: .8;
-    position: relative;
-    top: .1em;
-    box-shadow: 2px 2px rgba(51, 33, 33, 0.42);
+article h2#description+p:first-letter {
+  float: left;
+  color: #8b0000;
+  background: rgba(250, 240, 229, 0.64);
+  border: 1.5px solid rgb(149, 88, 28);
+  margin-right: .2em;
+  padding: .1em .1em 0 0;
+  font-family: UnifrakturMaguntia, cursive;
+  font-size: 2.5em;
+  line-height: .8;
+  position: relative;
+  top: .1em;
+  box-shadow: 2px 2px rgba(51, 33, 33, 0.42);
 }
 
 /* Ensure proper spacing after drop cap */
-article h2#description + p {
-	overflow: hidden;
-	text-align: justify;
+article h2#description+p {
+  overflow: hidden;
+  text-align: justify;
 }
