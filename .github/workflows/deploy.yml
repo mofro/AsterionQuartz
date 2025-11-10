@@ -35,33 +35,62 @@ jobs:
           # Install all dependencies
           npm install
 
-      - name: Setup Quartz content and styles
+      - name: Setup Quartz content and assets
         run: |
-          # Remove any broken symlinks
+          # 1. Handle content directory
           if [ -L "content" ] && [ ! -e "content" ]; then
             echo "Removing broken symlink..."
             rm content
           fi
           
-          # If content doesn't exist, create it and copy from obsidian
           if [ ! -e "content" ]; then
-            echo "Creating content directory and copying from obsidian..."
+            echo "[INFO] Creating content directory..."
             mkdir -p content
-            cp -r obsidian/* content/ || true
-          elif [ -d "content" ]; then
-            echo "Content directory exists, syncing with obsidian..."
-            rsync -a --delete obsidian/ content/ || true
+            if [ -d "obsidian" ]; then
+              echo "[COPY] Copying content from obsidian directory..."
+              cp -r obsidian/* content/ 2>/dev/null || echo "[WARN] No files to copy from obsidian/"
+            else
+              echo "[WARN] obsidian/ directory not found. Using empty content directory."
+            fi
+          elif [ -d "content" ] && [ -d "obsidian" ]; then
+            echo "[SYNC] Syncing obsidian/ with content/ directory (safe update only)..."
+            echo "       This will add/update files but not delete anything from content/"
+            rsync -a --info=name1,stats1 obsidian/ content/ || \
+              echo "[WARN] rsync encountered an error (this might be okay if obsidian/ is empty)"
+          else
+            echo "[INFO] Using existing content/ directory as-is"
           fi
           
-          # Ensure static directory exists
+          # Verify content directory
+          echo "[STATUS] Content directory status:"
+          ls -la content/ 2>/dev/null || echo "  (empty)"
+          
+          # 2. Ensure static assets are in the right place
+          echo "Setting up static assets..."
+          mkdir -p static
+          
+          # Copy assets from obsidian if they exist
+          if [ -d "obsidian/assets" ]; then
+            echo "Copying assets from obsidian..."
+            cp -r obsidian/assets/* static/ 2>/dev/null || true
+          fi
+          
+          # 3. Handle custom styles
+          echo "Setting up styles..."
           mkdir -p static/styles
           
-          # Copy custom SCSS file if it exists
           if [ -f "custom.scss" ]; then
-            cp custom.scss static/styles/ || true
+            echo "Using custom.scss..."
+            cp custom.scss static/styles/
           else
             echo "No custom.scss found, using default styles"
           fi
+          
+          # 4. Verify directory structure
+          echo "Final directory structure:"
+          ls -la
+          echo "Static directory:"
+          ls -la static/ || echo "No static directory"
           
           # Create a simple plugin to inject our CSS
           mkdir -p quartz/plugins/custom
