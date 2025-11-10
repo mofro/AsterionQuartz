@@ -42,7 +42,7 @@ $fullPageWidth: 1400px;
         rgba(0, 0, 0, 0.95)
       ),
       /* bottom, image */
-      url("/static/images/paper-texture-top-view.jpg")
+      url("/static/images/paper-texture-top-view.jpg"),
       fixed;
   }
 }
@@ -53,11 +53,11 @@ $fullPageWidth: 1400px;
     background:
       /* top, transparent black, faked with gradient */ 
       linear-gradient(
-        rgba(255, 255, 255, 0.5), 
-        rgba(255, 255, 255, 0.25)
+        rgba(255, 255, 255, 0.15), 
+        rgba(255, 255, 255, 0.20)
       ),
       /* bottom, image */
-      url("/static/images/paper-texture-top-view-2.jpg")
+      url("/static/images/paper-texture-top-view-2.jpg"),
       fixed;
   }
 }

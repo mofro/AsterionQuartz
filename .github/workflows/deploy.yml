@@ -153,9 +153,24 @@ jobs:
         run: |
           set -e  # Exit on error
           
-          # 1. Build the site
+          # Print current directory structure for debugging
+          echo "📂 Current directory structure:"
+          find . -maxdepth 2 -type d | sort
+          
+          # 1. Build the site with verbose output
           echo "🚀 Building site with base directory: $BASE_URL"
-          npx quartz build --baseDir "$BASE_URL" --verbose
+          echo "📝 Running: npx quartz build --baseDir \"$BASE_URL\" --verbose"
+          npx quartz build --baseDir "$BASE_URL" --verbose 2>&1 | tee build.log || \
+            { echo "❌ Build failed. Log:"; cat build.log; exit 1; }
+          
+          # Show the built files
+          echo "📦 Build output in public/:"
+          find public -type f | sort
+          
+          # Check for static assets
+          echo "🔍 Looking for static assets in build output:"
+          find public -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" | sort || \
+            echo "⚠️ No image files found in build output"
           
           # 2. Handle custom styles if they exist
           if [ -d "src/styles" ]; then
