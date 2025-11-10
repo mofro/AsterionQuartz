@@ -98,8 +98,8 @@ jobs:
           
       - name: Update Quartz configuration
         run: |
-          # Update just the baseUrl in the config (matching the exact format)
-          sed -i 's|baseUrl: "[^"]*"|baseUrl: "${{ github.event.repository.name }}"|' quartz.config.ts
+          # Update the baseUrl in the config to include the full GitHub Pages URL
+          sed -i 's|baseUrl: "[^"]*"|baseUrl: "mofro.github.io/${{ github.event.repository.name }}/"|' quartz.config.ts
           
           # Verify the config was updated
 

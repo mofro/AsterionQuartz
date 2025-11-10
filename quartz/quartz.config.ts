@@ -11,7 +11,7 @@ const config: QuartzConfig = {
     enableSPA: true,
     enablePopovers: true,
     analytics: null,
-    baseUrl: "mofro.github.io/AsterionQuartz",
+    baseUrl: "mofro.github.io/AsterionQuartz/",
     ignorePatterns: [
       "private",
       ".obsidian",
