@@ -61,7 +61,14 @@ const config: QuartzConfig = {
   plugins: {
     transformers: [
       Plugin.FrontMatter(),
-      Plugin.SCSS(),
+      Plugin.SCSS({
+        // Ensure our custom SCSS is processed after default styles
+        importPaths: ["styles"],
+        // Enable source maps for easier debugging
+        sourceMap: true,
+        // Minify the output
+        style: "compressed",
+      }),
       Plugin.CreatedModifiedDate({
         priority: ["frontmatter", "filesystem"],
       }),

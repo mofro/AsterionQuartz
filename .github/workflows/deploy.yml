@@ -154,23 +154,36 @@ jobs:
           set -e  # Exit on error
           
           # Print current directory structure for debugging
-          echo "📂 Current directory structure:"
+          echo "[DEBUG] Current directory structure:"
           find . -maxdepth 2 -type d | sort
           
-          # 1. Build the site with verbose output
-          echo "🚀 Building site with base directory: $BASE_URL"
-          echo "📝 Running: npx quartz build --baseDir \"$BASE_URL\" --verbose"
-          npx quartz build --baseDir "$BASE_URL" --verbose 2>&1 | tee build.log || \
-            { echo "❌ Build failed. Log:"; cat build.log; exit 1; }
+          # 1. Ensure custom styles directory exists
+          mkdir -p quartz/styles
           
-          # Show the built files
-          echo "📦 Build output in public/:"
+          # 2. Copy any custom SCSS files
+          if [ -f "custom.scss" ]; then
+            echo "[BUILD] Copying custom SCSS..."
+            cp custom.scss quartz/styles/_custom.scss
+          fi
+          
+          # 3. Build the site with verbose output
+          echo "[BUILD] Building site with base directory: $BASE_URL"
+          echo "[BUILD] Running: npx quartz build --baseDir \"$BASE_URL\" --verbose"
+          npx quartz build --baseDir "$BASE_URL" --verbose 2>&1 | tee build.log || \
+            { echo "[ERROR] Build failed. Log:"; cat build.log; exit 1; }
+          
+          # 4. Verify the build output
+          echo "[VERIFY] Build output in public/:"
           find public -type f | sort
           
-          # Check for static assets
-          echo "🔍 Looking for static assets in build output:"
+          # 5. Check for CSS files to verify styles were processed
+          echo "[VERIFY] Checking for compiled CSS:"
+          find public -name "*.css" | xargs ls -la || echo "[WARN] No CSS files found"
+          
+          # 6. Check for static assets
+          echo "[VERIFY] Static assets in build output:"
           find public -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" | sort || \
-            echo "⚠️ No image files found in build output"
+            echo "[WARN] No image files found in build output"
           
           # 2. Handle custom styles if they exist
           if [ -d "src/styles" ]; then

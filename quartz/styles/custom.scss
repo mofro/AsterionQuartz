@@ -41,24 +41,24 @@ $fullPageWidth: 1400px;
       linear-gradient(rgba(0, 0, 0, 0.745),
         rgba(0, 0, 0, 0.95)),
       /* bottom, image */
-      url("/images/paper-texture-top-view.jpg"),
+      url("/static/images/paper-texture-top-view.jpg"),
       fixed;
     background-size: cover;
   }
 }
 
 // Light theme
-:root,
-.light {
+
+:root, .light {
   body {
     background:
       /* top, transparent black, faked with gradient */
       linear-gradient(rgba(214, 201, 160, 0.5),
         rgba(140, 125, 99, 0.5)),
       /* bottom, image */
-      url("/images/paper-texture-top-view.jpg"),
+      url("/static/images/a_still_of_parchment_paper.jpg"),
       fixed;
-
+    background-size: 100% auto;
   }
 }
 
