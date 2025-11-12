@@ -85,27 +85,35 @@ jobs:
         run: |
           # Clear any existing files
           rm -rf public
-          mkdir -p public/static/images
+          mkdir -p public/images
           
-          # List of required assets
-          declare -a required_assets=(
-            "logo.png"
-            "paper-texture-top-view-2.jpg"
-            "background.jpg"
+          # List of required assets with their expected locations
+          declare -A required_assets=(
+            ["logo.png"]="/images/logo.png"
+            ["paper-texture-top-view-2.jpg"]="/images/paper-texture-top-view-2.jpg"
+            ["background.jpg"]="/images/background.jpg"
           )
           
-          # Function to find and copy assets to /images/
+          # Function to find and copy assets
           find_and_copy_asset() {
             local asset_name=$1
-            local source_dirs=("static/images" "quartz/static/images" "assets/images" "images" "static" "quartz/static" "assets")
+            local target_path="public${required_assets[$asset_name]}"
+            local source_dirs=("static" "quartz/static" "assets" "images" "static/images" "quartz/static/images" "assets/images")
             
+            # Create target directory
+            mkdir -p "$(dirname "$target_path")"
+            
+            # Try to find and copy the file
             for dir in "${source_dirs[@]}"; do
               if [ -f "$dir/$asset_name" ]; then
-                echo "Found $asset_name in $dir/"
-                mkdir -p "public/images"
-                cp "$dir/$asset_name" "public/images/"
+                echo "Copying $dir/$asset_name to $target_path"
+                cp "$dir/$asset_name" "$target_path"
                 return 0
               fi
+            done
+            
+            echo "Warning: Could not find $asset_name in any source directory"
+            return 0
             done
             echo "Warning: Could not find $asset_name in any source directory"
             # Don't fail the build for missing files
@@ -113,16 +121,15 @@ jobs:
           }
           
           # Copy all required assets
-          for asset in "${required_assets[@]}"; do
+          for asset in "${!required_assets[@]}"; do
             find_and_copy_asset "$asset"
           done
           
-          # Copy any additional files from static/ and quartz/static/ but skip images
+          # Copy other non-image static files
           for dir in static quartz/static; do
             if [ -d "$dir" ]; then
               echo "Copying non-image files from $dir/..."
-              # Copy everything except images
-              find "$dir" -type f ! -name "*.png" ! -name "*.jpg" ! -name "*.jpeg" ! -name "*.gif" ! -name "*.svg" -exec cp --parents {} public/ \; 2>/dev/null || true
+              find "$dir" -type f \( -name "*.css" -o -name "*.js" -o -name "*.json" \) -exec cp --parents {} public/ \; 2>/dev/null || true
             fi
           done
           
@@ -132,13 +139,14 @@ jobs:
             cp custom.scss public/styles/
           fi
           
-          # Verify all required files were copied to /images/
-          echo -e "\nVerifying required files in public/images/:"
-          for asset in "${required_assets[@]}"; do
-            if [ -f "public/images/$asset" ]; then
-              echo "✓ $asset"
+          # Verify all required files were copied
+          echo -e "\n=== Verifying required files ==="
+          for asset in "${!required_assets[@]}"; do
+            target_path="public${required_assets[$asset]}"
+            if [ -f "$target_path" ]; then
+              echo "✓ $asset -> ${required_assets[$asset]}"
             else
-              echo "✗ $asset (missing)"
+              echo "✗ $asset (missing at $target_path)"
               echo "  Searched in:"
               find . -name "$asset" -not -path "*/node_modules/*" -not -path "*/public/*" | head -n 3
             fi
