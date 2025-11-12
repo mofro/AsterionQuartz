@@ -1,0 +1,123 @@
+name: Test Asset Deployment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-assets:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm install
+
+    # First, show the current directory structure
+    - name: Show directory structure
+      run: |
+        echo "=== Current Directory Structure ==="
+        find . -type d -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/.github/*" | sort
+        echo ""
+
+    # Show all image files in the repository
+    - name: Find all image files
+      run: |
+        echo "=== All Image Files ==="
+        find . -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" \) \
+               -not -path "*/node_modules/*" \
+               -not -path "*/.git/*" \
+               -not -path "*/.github/*" | sort
+        echo ""
+
+    # Build the site
+    - name: Build Quartz site
+      run: npx quartz build
+
+    # Show the public directory structure after build
+    - name: Show public directory structure
+      run: |
+        echo "=== Public Directory Structure ==="
+        if [ -d "public" ]; then
+          find public -type f | sort
+        else
+          echo "No public directory found after build!"
+        fi
+        echo ""
+
+    # Manually copy assets with verification
+    - name: Manual Asset Copy with Verification
+      run: |
+        echo "=== Starting Manual Asset Copy ==="
+        
+        # Create necessary directories
+        mkdir -p public/static/images
+        
+        # Define source directories to check
+        SOURCES=(
+          "assets/images"
+          "assets"
+          "static/images"
+          "static"
+          "quartz/static/images"
+          "quartz/static"
+          "quartz/public/static"
+        )
+        
+        # Copy and verify each source
+        for src in "${SOURCES[@]}"; do
+          if [ -d "$src" ] || [ -f "$src" ]; then
+            echo "\n=== Processing $src ==="
+            echo "Contents of $src:"
+            find "$src" -type f 2>/dev/null || echo "  (empty or not found)"
+            
+            echo "\nCopying from $src to public/static/..."
+            mkdir -p "public/static/$(dirname "$src")"
+            cp -rv "$src" "public/static/" 2>/dev/null || echo "  (copy failed or not needed)"
+          fi
+        done
+        
+        # Verify final structure
+        echo "\n=== Final Public/Static Structure ==="
+        find public/static -type f | sort
+        
+        echo "\n=== Verifying logo.png ==="
+        find public -name "logo.png" | sort
+        if [ -f "public/static/logo.png" ]; then
+          echo "✅ logo.png found in public/static/"
+        else
+          echo "❌ logo.png NOT found in public/static/"
+        fi
+
+    # Run a simple HTTP server to verify the built site
+    - name: Verify built site
+      run: |
+        echo "=== Starting HTTP Server ==="
+        cd public
+        python3 -m http.server 8080 &
+        SERVER_PID=$!
+        sleep 2
+        
+        echo "\n=== Testing Endpoints ==="
+        curl -I http://localhost:8080/static/images/logo.png || echo "Failed to fetch logo.png"
+        
+        # Kill the server
+        kill $SERVER_PID
+
+    # Create a downloadable artifact of the public directory
+    - name: Upload public directory
+      uses: actions/upload-artifact@v3
+      with:
+        name: public-dir
+        path: public/
+        retention-days: 1
