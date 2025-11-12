@@ -85,59 +85,29 @@ jobs:
         run: |
           # Clear any existing files
           rm -rf public
-          mkdir -p public/images
+          mkdir -p public/static
           
-          # List of required assets with their expected locations
-          # These paths must match the references in the CSS/HTML
-          declare -A required_assets=(
-            ["logo.png"]="/static/images/logo.png"
-            ["paper-texture-top-view-2.jpg"]="/static/images/paper-texture-top-view-2.jpg"
-            ["background.jpg"]="/static/images/background.jpg"
-          )
+          # Copy all static files from quartz/static to public/static
+          if [ -d "quartz/static" ]; then
+            echo "📁 Copying quartz/static/ to public/static/"
+            cp -r quartz/static/* public/static/
+          else
+            echo "⚠️  quartz/static/ directory not found!"
+          fi
           
-          # Function to find and copy assets
-          find_and_copy_asset() {
-            local asset_name=$1
-            local target_path="public${required_assets[$asset_name]}"
-            echo "Copying $asset_name to $target_path"
-            local source_dirs=("static" "quartz/static" "assets" "images" "static/images" "quartz/static/images" "assets/images")
-            
-            # Create target directory
-            mkdir -p "$(dirname "$target_path")"
-            
-            # Try to find and copy the file
-            for dir in "${source_dirs[@]}"; do
-              if [ -f "$dir/$asset_name" ]; then
-                echo "Copying $dir/$asset_name to $target_path"
-                cp "$dir/$asset_name" "$target_path"
-                return 0
-              fi
-            done
-            
-            echo "Warning: Could not find $asset_name in any source directory"
-            # Don't fail the build for missing files
-            return 0
-          }
-          
-          # Copy all required assets
-          for asset in "${!required_assets[@]}"; do
-            find_and_copy_asset "$asset"
-          done
-          
-          # Copy other static files, preserving directory structure
-          for dir in static quartz/static; do
-            if [ -d "$dir" ]; then
-              echo "Copying files from $dir/..."
-              # Copy everything except images (handled by find_and_copy_asset)
-              find "$dir" -type f \( -name "*.css" -o -name "*.js" -o -name "*.json" \) -exec cp --parents {} public/ \; 2>/dev/null || true
+          # Verify critical assets
+          echo -e "\n🔍 Verifying critical assets:"
+          for asset in "logo.png" "paper-texture-top-view-2.jpg" "background.jpg"; do
+            if [ -f "public/static/images/$asset" ]; then
+              echo "✅ Found: public/static/images/$asset"
+            else
+              echo "❌ Missing: public/static/images/$asset"
             fi
           done
           
-          # Handle custom.scss
-          if [ -f "custom.scss" ]; then
-            mkdir -p public/styles
-            cp custom.scss public/styles/
-          fi
+          # Show final directory structure
+          echo -e "\n📁 Final public directory structure:"
+          find public -type f | sort
           
           # Enhanced verification with detailed debugging
           echo -e "\n=== Enhanced Verification ==="
