@@ -136,17 +136,41 @@ jobs:
             cp custom.scss public/styles/
           fi
           
-          # Verify all required files were copied
-          echo -e "\n=== Verifying required files ==="
+          # Enhanced verification with detailed debugging
+          echo -e "\n=== Enhanced Verification ==="
           for asset in "${!required_assets[@]}"; do
             target_path="public${required_assets[$asset]}"
+            echo -e "\n--- Checking $asset ---"
+            
+            # Check if file exists at target
             if [ -f "$target_path" ]; then
-              echo "✓ $asset -> ${required_assets[$asset]}"
+              echo "✓ Found at: $target_path"
+              echo "  File details: $(ls -la "$target_path" 2>/dev/null || echo 'Not found')"
             else
-              echo "✗ $asset (missing at $target_path)"
-              echo "  Searched in:"
-              find . -name "$asset" -not -path "*/node_modules/*" -not -path "*/public/*" | head -n 3
+              echo "✗ Not found at: $target_path"
             fi
+            
+            # Check where the file actually is
+            echo -e "\nSearching for $asset in project..."
+            found_locations=$(find . -name "$asset" -not -path "*/node_modules/*" -not -path "*/public/*" 2>/dev/null || true)
+            
+            if [ -n "$found_locations" ]; then
+              echo "  Found in these locations:"
+              echo "$found_locations" | while read -r loc; do
+                echo "  - $loc (size: $(du -h "$loc" | cut -f1))"
+              done
+            else
+              echo "  File not found in project (except possibly in node_modules or public)"
+            fi
+            
+            # Check if file exists in built output
+            echo -e "\nChecking built files for references to $asset:"
+            find public -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" \) -exec grep -l "$asset" {} \; 2>/dev/null | while read -r file; do
+              echo "  Referenced in: $file"
+              grep -o "[^\"]*$asset[^\"]*" "$file" | sort | uniq | while read -r ref; do
+                echo "    - $ref"
+              done
+            done || echo "  No references found in built files"
           done
           
           # Log final structure for debugging
