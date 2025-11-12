@@ -95,16 +95,27 @@ jobs:
             cp -r quartz/static/* public/static/
           fi
           
-          # 2. Ensure images directory exists and copy any images
-          mkdir -p public/static/images
+          # 2. Set up static assets
+          echo "🔍 Setting up static assets..."
           
-          # 3. Copy logo.png from common locations if it exists
-          for dir in "static" "assets" "images" ""; do
-            if [ -f "$dir/logo.png" ]; then
-              echo "📄 Found logo.png in $dir/, copying to public/static/images/"
-              cp "$dir/logo.png" public/static/images/
-              break
-            fi
+          # Copy from quartz/static/images if it exists
+          if [ -d "quartz/static/images" ]; then
+            echo "📁 Copying quartz/static/images/ to public/static/images/"
+            mkdir -p public/static/images
+            cp -r quartz/static/images/* public/static/images/
+          fi
+          
+          # Copy specific known assets
+          for asset in "logo.png" "paper-texture-top-view-2.jpg"; do
+            # Check in common locations
+            for dir in "static" "assets" "images" ""; do
+              if [ -f "$dir/$asset" ]; then
+                echo "📄 Found $asset in $dir/, copying to public/static/images/"
+                mkdir -p public/static/images
+                cp "$dir/$asset" "public/static/images/"
+                break
+              fi
+            done
           done
           
           # 4. Show final directory structure
@@ -128,11 +139,16 @@ jobs:
             fi
           done
           
-          # Check where CSS is looking for images
-          echo -e "\n🔍 Checking CSS image references:"
-          find public -name "*.css" -exec grep -l "url(" {} \; | while read -r cssfile; do
-            echo -e "\nIn $cssfile:"
-            grep -o 'url([^)]*)' "$cssfile" | grep -i -E 'logo|background|texture|paper' | sort | uniq
+          # Check for image files in the public directory
+          echo -e "\n🔍 Checking for image files:"
+          find public -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) | sort
+          
+          # Check CSS files for image references
+          echo -e "\n🔍 Checking CSS files for image references:"
+          for cssfile in $(find public -name "*.css" -type f); do
+            echo -e "\n📄 $cssfile"
+            # Use head to prevent long outputs that might cause broken pipes
+            grep -o 'url([^)]*)' "$cssfile" | grep -i -E 'logo|background|texture|paper' | head -n 10 | sort | uniq
           done
 
       - name: Debug build process
