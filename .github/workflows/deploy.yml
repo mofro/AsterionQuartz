@@ -113,9 +113,6 @@ jobs:
             done
             
             echo "Warning: Could not find $asset_name in any source directory"
-            return 0
-            done
-            echo "Warning: Could not find $asset_name in any source directory"
             # Don't fail the build for missing files
             return 0
           }
