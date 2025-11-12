@@ -87,23 +87,20 @@ jobs:
           rm -rf public
           mkdir -p public
           
-          # Create static directory structure
-          mkdir -p public/static
-          
-          # Copy assets to maintain the /static/ path
+          # Copy assets directly to public/
           if [ -d "assets" ]; then
-            echo "Copying assets to static/..."
-            cp -r assets/* public/static/ 2>/dev/null || true
+            echo "Copying assets/..."
+            cp -r assets/* public/ 2>/dev/null || true
           fi
           
           if [ -d "static" ]; then
-            echo "Merging static/..."
-            cp -r static/* public/static/ 2>/dev/null || true
+            echo "Copying static/..."
+            cp -r static/* public/ 2>/dev/null || true
           fi
           
           if [ -d "quartz/static" ]; then
-            echo "Merging quartz/static/..."
-            cp -r quartz/static/* public/static/ 2>/dev/null || true
+            echo "Copying quartz/static/..."
+            cp -r quartz/static/* public/ 2>/dev/null || true
           fi
           
           # Handle custom.scss
@@ -116,10 +113,22 @@ jobs:
           echo "Final public directory structure:"
           find public -type f | sort
 
-      - name: Build Quartz
+      - name: Build Quartz with verbose output
         run: |
-          # Build with the repository name as base directory for GitHub Pages
-          npx quartz build --baseDir "/AsterionQuartz"
+          # Run build with verbose output
+          echo "=== Running build with verbose output ==="
+          npx quartz build --baseDir "/AsterionQuartz" --verbose
+          
+          # Check where assets are being referenced
+          echo "\n=== Checking asset references in built files ==="
+          echo "HTML files referencing static content:"
+          find public -name "*.html" -type f -exec grep -l "static/" {} \; | head -n 5 | xargs -I{} echo "  {}"
+          
+          echo "\nCSS files referencing static content:"
+          find public -name "*.css" -type f -exec grep -l "static/" {} \; | head -n 5 | xargs -I{} echo "  {}"
+          
+          echo "\nActual static files in public directory:"
+          find public -type f | grep -i "\.\(png\|jpg\|jpeg\|gif\|svg\)" | head -n 10
 
       - name: Verify asset paths
         run: |
