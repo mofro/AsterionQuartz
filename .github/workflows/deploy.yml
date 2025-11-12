@@ -147,22 +147,32 @@ jobs:
           echo -e "\nFinal public directory structure:"
           find public -type f | sort
 
-      - name: Build Quartz with verbose output
+      - name: Debug build process
         run: |
-          # Run build with verbose output
-          echo "=== Running build with verbose output ==="
+          # Show what files exist before build
+          echo "=== Files before build ==="
+          find public -type f | sort
+          
+          # Show disk space
+          echo -e "\n=== Disk space ==="
+          df -h
+          
+          # Run build with debug output
+          echo -e "\n=== Build output ==="
           npx quartz build --baseDir "/AsterionQuartz" --verbose
           
-          # Check where assets are being referenced
-          echo "\n=== Checking asset references in built files ==="
-          echo "HTML files referencing static content:"
-          find public -name "*.html" -type f -exec grep -l "static/" {} \; | head -n 5 | xargs -I{} echo "  {}"
+          # Show what files exist after build
+          echo -e "\n=== Files after build ==="
+          find public -type f | sort
           
-          echo "\nCSS files referencing static content:"
-          find public -name "*.css" -type f -exec grep -l "static/" {} \; | head -n 5 | xargs -I{} echo "  {}"
-          
-          echo "\nActual static files in public directory:"
-          find public -type f | grep -i "\.\(png\|jpg\|jpeg\|gif\|svg\)" | head -n 10
+          # Check for our key files
+          echo -e "\n=== Looking for key files ==="
+          for file in "logo.png" "paper-texture"; do
+            echo -e "\nFiles matching '$file':"
+            find public -iname "*${file}*"
+            echo -e "\nReferences to '$file' in HTML/CSS:"
+            find public \( -name "*.html" -o -name "*.css" \) -exec grep -l "$file" {} \; | head -n 5
+          done
 
       - name: Verify asset paths
         run: |
