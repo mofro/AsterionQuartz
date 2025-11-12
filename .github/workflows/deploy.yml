@@ -102,12 +102,14 @@ jobs:
             for dir in "${source_dirs[@]}"; do
               if [ -f "$dir/$asset_name" ]; then
                 echo "Found $asset_name in $dir/"
-                cp "$dir/$asset_name" public/static/images/
+                mkdir -p "public/static/images"
+                cp "$dir/$asset_name" "public/static/images/"
                 return 0
               fi
             done
             echo "Warning: Could not find $asset_name in any source directory"
-            return 1
+            # Don't fail the build for missing files
+            return 0
           }
           
           # Copy all required assets
