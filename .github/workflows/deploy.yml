@@ -119,7 +119,9 @@ jobs:
           [ -f "public/static/images/paper-texture-top-view-2.jpg" ] && echo "✓ paper-texture-top-view-2.jpg exists" || echo "✗ paper-texture-top-view-2.jpg missing"
 
       - name: Build Quartz
-        run: npx quartz build
+        run: |
+          # Build with the repository name as base URL for GitHub Pages
+          npx quartz build --baseUrl "https://mofro.github.io/AsterionQuartz"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
