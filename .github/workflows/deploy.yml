@@ -88,16 +88,18 @@ jobs:
           mkdir -p public/images
           
           # List of required assets with their expected locations
+          # These paths must match the references in the CSS/HTML
           declare -A required_assets=(
-            ["logo.png"]="/images/logo.png"
-            ["paper-texture-top-view-2.jpg"]="/images/paper-texture-top-view-2.jpg"
-            ["background.jpg"]="/images/background.jpg"
+            ["logo.png"]="/static/images/logo.png"
+            ["paper-texture-top-view-2.jpg"]="/static/images/paper-texture-top-view-2.jpg"
+            ["background.jpg"]="/static/images/background.jpg"
           )
           
           # Function to find and copy assets
           find_and_copy_asset() {
             local asset_name=$1
             local target_path="public${required_assets[$asset_name]}"
+            echo "Copying $asset_name to $target_path"
             local source_dirs=("static" "quartz/static" "assets" "images" "static/images" "quartz/static/images" "assets/images")
             
             # Create target directory
@@ -122,10 +124,11 @@ jobs:
             find_and_copy_asset "$asset"
           done
           
-          # Copy other non-image static files
+          # Copy other static files, preserving directory structure
           for dir in static quartz/static; do
             if [ -d "$dir" ]; then
-              echo "Copying non-image files from $dir/..."
+              echo "Copying files from $dir/..."
+              # Copy everything except images (handled by find_and_copy_asset)
               find "$dir" -type f \( -name "*.css" -o -name "*.js" -o -name "*.json" \) -exec cp --parents {} public/ \; 2>/dev/null || true
             fi
           done
