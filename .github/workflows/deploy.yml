@@ -68,23 +68,41 @@ jobs:
           # 2. Set up static assets directory structure
           echo "[SETUP] Preparing static assets..."
           
-          # Create necessary directories
+          # Create a temporary directory for assets
+          mkdir -p temp_assets
+          
+          # 3. Copy static assets to temporary location first
+          echo "[COPY] Collecting static assets..."
+          
+          # Copy from obsidian/assets if it exists
+          if [ -d "obsidian/assets" ]; then
+            echo "[COPY] Collecting assets from obsidian/assets/..."
+            mkdir -p temp_assets/obsidian_assets
+            cp -r obsidian/assets/* temp_assets/obsidian_assets/ 2>/dev/null || true
+          fi
+          
+          # Copy from root static/ directory if it exists
+          if [ -d "static" ]; then
+            echo "[COPY] Collecting assets from static/..."
+            mkdir -p temp_assets/static_files
+            cp -r static/* temp_assets/static_files/ 2>/dev/null || true
+          fi
+          
+          # 4. Now copy all collected assets to public/static
+          echo "[COPY] Moving assets to public/static/..."
           mkdir -p public/static
           
-          # 3. Copy static assets from multiple possible locations
-          echo "[COPY] Looking for static assets..."
-          
-          # Check and copy from obsidian/assets directly to public/static
-          if [ -d "obsidian/assets" ]; then
-            echo "[COPY] Copying assets from obsidian/assets/ to public/static/..."
-            cp -r obsidian/assets/* public/static/ 2>/dev/null || true
+          # Copy from temp directories if they exist
+          if [ -d "temp_assets/obsidian_assets" ]; then
+            cp -r temp_assets/obsidian_assets/* public/static/ 2>/dev/null || true
           fi
           
-          # Check and copy from root static/ directory
-          if [ -d "static" ]; then
-            echo "[COPY] Copying existing static/ contents to public/static/..."
-            cp -r static/* public/static/ 2>/dev/null || true
+          if [ -d "temp_assets/static_files" ]; then
+            cp -r temp_assets/static_files/* public/static/ 2>/dev/null || true
           fi
+          
+          # Clean up temporary files
+          rm -rf temp_assets
           
           # 4. Handle custom styles
           echo "[STYLES] Setting up styles..."
@@ -206,12 +224,8 @@ jobs:
             fi
           fi
           
-          # 3. Copy static assets if they exist
-          if [ -d "static" ]; then
-            echo "📁 Copying static assets..."
-            mkdir -p public/static
-            cp -r static/* public/static/ 2>/dev/null || true
-          fi
+          # 3. Skip this redundant copy as we've already handled static assets
+          echo "ℹ️  Static assets already processed in previous step"
           
           # 4. Prepare for deployment
           echo "📦 Preparing for deployment..."
