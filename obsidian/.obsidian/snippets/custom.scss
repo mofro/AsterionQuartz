@@ -5,6 +5,11 @@ $fullPageWidth: 1400px;
 
 // put your custom CSS here!
 
+.page>#quartz-body .sidebar {
+  display: none;
+  padding: 0rem 2rem 2rem
+}
+
 // Ensure right column components stack vertically
 .right {
   display: flex;

@@ -5,13 +5,13 @@ const config: QuartzConfig = {
   configuration: {
     pageTitle: "The Asterion Garden",
     pageIcon: {
-      light: "/static/logo.png",
-      dark: "/static/logo.png", // Optional: different logo for dark mode
+      light: "/images/logo.png",
+      dark: "/images/logo.png",
     },
     enableSPA: true,
     enablePopovers: true,
     analytics: null,
-    baseUrl: "mofro.github.io/AsterionQuartz/",
+    baseUrl: "https://mofro.github.io/AsterionQuartz/",
     ignorePatterns: [
       "private",
       ".obsidian",
@@ -21,6 +21,7 @@ const config: QuartzConfig = {
       "dev-notes",
       ".DS_Store",
       "**/📄 Templates/**",
+      "**/node_modules/**",  // Add this to ignore node_modules
     ],
     defaultDateType: "created",
     theme: {
@@ -100,9 +101,10 @@ const config: QuartzConfig = {
         enableRSS: true,
       }),
       Plugin.Assets({
-        directory: 'static',
+        directory: 'assets',
         include: ['**/*'],
-        exclude: [],
+        exclude: ['**/.DS_Store'],
+        linkRoot: '/',
       }),
       Plugin.NotFoundPage(),
     ],

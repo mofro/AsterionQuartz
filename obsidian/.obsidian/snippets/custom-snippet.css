@@ -1,5 +1,9 @@
 
 
+.page>#quartz-body .sidebar {
+  padding: 0rem 2rem 2rem !important;
+}
+
 // Ensure right column components stack vertically
 .right {
   display: flex;

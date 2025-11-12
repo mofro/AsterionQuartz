@@ -1,11 +1,26 @@
-@use "./base.scss";
+@use "./base";
+@use "./backgrounds";
 
-// put your custom CSS here!
 // Override responsive breakpoint to 1400px (default is 1510px)
 $fullPageWidth: 1400px;
 
 // Custom styles go here
 // These will be applied after all default Quartz styles
+
+// Ensure content is readable on top of the background
+main {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 2rem;
+  margin: 1rem auto;
+  max-width: $fullPageWidth;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.page>#quartz-body .sidebar {
+  padding: 0rem 2rem 2rem !important;
+}
+
 
 // Ensure right column components stack vertically
 .right {
@@ -33,33 +48,21 @@ $fullPageWidth: 1400px;
   display: none;
 }
 
-// Dark theme
-.dark {
-  body {
-    background:
-      /* top, transparent black, faked with gradient */
-      linear-gradient(rgba(0, 0, 0, 0.745),
-        rgba(0, 0, 0, 0.95)),
-      /* bottom, image */
-      url("/static/images/paper-texture-top-view.jpg"),
-      fixed;
-    background-size: cover;
-  }
+/* For dark theme */
+.dark body {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.745), rgba(0, 0, 0, 0.95)),
+    url("/images/paper-texture-top-view.jpg") fixed;
+  background-size: cover;
 }
 
-// Light theme
-
-:root, .light {
-  body {
-    background:
-      /* top, transparent black, faked with gradient */
-      linear-gradient(rgba(214, 201, 160, 0.5),
-        rgba(140, 125, 99, 0.5)),
-      /* bottom, image */
-      url("/static/images/a_still_of_parchment_paper.jpg"),
-      fixed;
-    background-size: 100% auto;
-  }
+/* For light theme */
+:root,
+.light body {
+  background:
+    linear-gradient(rgba(214, 201, 160, 0.5), rgba(140, 125, 99, 0.5)),
+    url("/images/a_still_of_parchment_paper.jpg") fixed;
+  background-size: cover;
 }
 
 // Spacing for Darkmode + Search row

@@ -1,0 +1,32 @@
+// Background image variables
+:root {
+  --parchment-bg: url('/images/a_still_of_parchment_paper.png');
+}
+
+// Body background with parchment texture
+body {
+  background-image: var(--parchment-bg);
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
+
+// For dark mode (if needed)
+[data-theme="dark"] {
+  // You can add a different background for dark mode if needed
+  // --parchment-bg: url('/images/dark-paper-texture.png');
+  
+  // Optional: Add a dark overlay for better text readability
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
+}
