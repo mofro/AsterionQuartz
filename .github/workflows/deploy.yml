@@ -123,6 +123,13 @@ jobs:
           # Build with the repository name as base directory for GitHub Pages
           npx quartz build --baseDir "/AsterionQuartz"
 
+      - name: Debug built HTML
+        run: |
+          echo "Checking built HTML for asset paths..."
+          find public -name "*.html" -type f -exec grep -l "static/" {} \; | head -n 1 | xargs -I{} grep -o '"static/[^"]*"' {}
+          echo "\nChecking built CSS for asset paths..."
+          find public -name "*.css" -type f -exec grep -l "static/" {} \; | head -n 1 | xargs -I{} grep -o '"static/[^"]*"' {}
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
