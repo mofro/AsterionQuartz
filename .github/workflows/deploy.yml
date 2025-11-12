@@ -81,7 +81,7 @@ jobs:
 
             setupContent();
 
-      - name: Setup static assets
+      - name: Prepare static assets
         run: |
           # Clear any existing files
           rm -rf public
@@ -89,18 +89,16 @@ jobs:
           # Create base directories
           mkdir -p public/static/images
           
-          # 1. First, copy all static files from quartz/static to public/static
+          # 1. Copy all static files to public/static
           if [ -d "quartz/static" ]; then
             echo "📁 Copying quartz/static/ to public/static/"
-            # Copy everything except images first
-            find quartz/static -type f ! -name "*.png" ! -name "*.jpg" ! -name "*.jpeg" ! -name "*.gif" ! -name "*.svg" -exec cp --parents {} public/ \;
-            # Then copy images to the correct location
-            if [ -d "quartz/static/images" ]; then
-              cp -r quartz/static/images/* public/static/images/
-            fi
+            cp -r quartz/static/* public/static/
           fi
           
-          # 2. Check for logo in common locations and copy to public/static/images/
+          # 2. Ensure images directory exists and copy any images
+          mkdir -p public/static/images
+          
+          # 3. Copy logo.png from common locations if it exists
           for dir in "static" "assets" "images" ""; do
             if [ -f "$dir/logo.png" ]; then
               echo "📄 Found logo.png in $dir/, copying to public/static/images/"
@@ -109,32 +107,33 @@ jobs:
             fi
           done
           
-          # 3. Verify all critical assets are in place
-          echo -e "\n🔍 Verifying critical assets:"
-          for asset in "logo.png" "paper-texture-top-view-2.jpg"; do
-            if [ -f "public/static/images/$asset" ]; then
-              echo "✅ Found: public/static/images/$asset"
+          # 4. Show final directory structure
+          echo -e "\n📁 Prepared public directory structure:"
+          find public -type f | sort
+          
+      - name: Build Quartz site
+        run: |
+          # Build with the correct base URL for GitHub Pages
+          echo "🏗️  Building Quartz site..."
+          npx quartz build --baseDir "/${{ github.event.repository.name }}"
+          
+          # Verify built files
+          echo -e "\n🔍 Verifying built files:"
+          echo "Checking for critical files:"
+          for file in "index.html" "static/images/paper-texture-top-view-2.jpg" "static/images/logo.png"; do
+            if [ -f "public/$file" ]; then
+              echo "✅ Found: public/$file"
             else
-              echo "❌ Missing: public/static/images/$asset"
-              echo "   Searching in project..."
-              find . -name "$asset" -not -path "*/node_modules/*" -not -path "*/public/*" 2>/dev/null || echo "   Not found in project"
+              echo "❌ Missing: public/$file"
             fi
           done
           
-          # 4. Clean up any duplicate files (case-insensitive)
-          echo -e "\n🧹 Cleaning up duplicate files..."
-          find public -type f -iname "*.jpg" -o -iname "*.png" | sort -f | uniq -i -d | while read -r dup; do
-            echo "   Removing duplicate: $dup"
-            rm -f "$dup"
+          # Check where CSS is looking for images
+          echo -e "\n🔍 Checking CSS image references:"
+          find public -name "*.css" -exec grep -l "url(" {} \; | while read -r cssfile; do
+            echo -e "\nIn $cssfile:"
+            grep -o 'url([^)]*)' "$cssfile" | grep -i -E 'logo|background|texture|paper' | sort | uniq
           done
-          
-          # 5. Show final directory structure
-          echo -e "\n📁 Final public directory structure (images only):"
-          find public -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) | sort
-          
-          # Log final structure for debugging
-          echo -e "\nFinal public directory structure:"
-          find public -type f | sort
 
       - name: Debug build process
         run: |
