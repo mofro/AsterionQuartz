@@ -90,53 +90,46 @@ jobs:
             
             async function copyAssets() {
               try {
-                // Ensure public/static exists
+                // Clear the public/static directory first
+                await fs.rm('public/static', { recursive: true, force: true });
                 await fs.mkdir('public/static', { recursive: true });
 
-                // Copy from obsidian/assets if it exists
-                try {
-                  await fs.access('obsidian/assets');
-                  console.log('Copying assets from obsidian/assets/...');
-                  await fs.cp('obsidian/assets', 'public/static/assets', { recursive: true, force: true });
-                } catch (err) {
-                  if (err.code !== 'ENOENT') throw err;
-                }
-
-                // Copy from static/ if it exists
-                try {
-                  await fs.access('static');
-                  console.log('Merging static/...');
-                  
-                  const copyRecursive = async (src, dest) => {
+                // Function to copy files from src to dest, merging directories
+                const copyFiles = async (src, dest) => {
+                  try {
                     const entries = await fs.readdir(src, { withFileTypes: true });
                     
-                    for (let entry of entries) {
-                      const srcPath = path.join(src, entry.name);
-                      let destPath = path.join(dest, entry.name);
-                      
-                      // Skip .DS_Store and other hidden files
+                    for (const entry of entries) {
+                      // Skip hidden files and directories
                       if (entry.name.startsWith('.')) continue;
                       
-                      // If we're copying from static to public/static and encounter another static dir,
-                      // merge its contents instead of creating a nested static dir
-                      if (src.endsWith('static') && entry.name === 'static') {
-                        await copyRecursive(srcPath, dest);
-                        continue;
-                      }
+                      const srcPath = path.join(src, entry.name);
+                      const destPath = path.join(dest, entry.name);
                       
                       if (entry.isDirectory()) {
                         await fs.mkdir(destPath, { recursive: true });
-                        await copyRecursive(srcPath, destPath);
+                        await copyFiles(srcPath, destPath);
                       } else {
+                        await fs.mkdir(path.dirname(destPath), { recursive: true });
                         await fs.copyFile(srcPath, destPath);
                       }
                     }
-                  };
-                  
-                  await copyRecursive('static', 'public/static');
-                } catch (err) {
-                  if (err.code !== 'ENOENT') throw err;
-                }
+                  } catch (err) {
+                    if (err.code !== 'ENOENT') throw err;
+                  }
+                };
+
+                // Copy from obsidian/assets to public/static/assets
+                console.log('Copying assets from obsidian/assets/...');
+                await copyFiles('obsidian/assets', 'public/static/assets');
+
+                // Copy from static/ to public/static
+                console.log('Copying from static/...');
+                await copyFiles('static', 'public/static');
+
+                // Copy from quartz/static to public/static (merge contents)
+                console.log('Copying from quartz/static...');
+                await copyFiles('quartz/static', 'public/static');
 
                 // Handle custom styles
                 try {
@@ -149,20 +142,24 @@ jobs:
                   console.log('No custom.scss found, using default styles');
                 }
 
-                // Verify the structure
+                // Log the final structure for debugging
                 console.log('Final static assets structure:');
                 const listFiles = async (dir, prefix = '') => {
-                  const entries = await fs.readdir(dir, { withFileTypes: true });
-                  
-                  for (let entry of entries) {
-                    const fullPath = path.join(dir, entry.name);
-                    const relativePath = path.join(prefix, entry.name);
+                  try {
+                    const entries = await fs.readdir(dir, { withFileTypes: true });
                     
-                    if (entry.isDirectory()) {
-                      await listFiles(fullPath, relativePath);
-                    } else {
-                      console.log(relativePath);
+                    for (const entry of entries) {
+                      const fullPath = path.join(dir, entry.name);
+                      const relativePath = path.join(prefix, entry.name);
+                      
+                      if (entry.isDirectory()) {
+                        await listFiles(fullPath, relativePath);
+                      } else {
+                        console.log(relativePath);
+                      }
                     }
+                  } catch (err) {
+                    console.error(`Error listing ${dir}:`, err);
                   }
                 };
                 
