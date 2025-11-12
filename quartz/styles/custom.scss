@@ -17,10 +17,12 @@ main {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.page>#quartz-body .sidebar {
+.page>#quartz-body .sidebar.left {
   padding: 0rem 2rem 2rem !important;
 }
-
+.page>#quartz-body .sidebar.right {
+  padding: 6rem 2rem 2rem !important;
+}
 
 // Ensure right column components stack vertically
 .right {
@@ -87,12 +89,13 @@ h2.anchor-only {
 // Character card styling for transcluded Fellowship members
 .transclude {
   border: 2px solid var(--gold, #d4af37);
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 1.5rem;
   margin: 1.5rem 0;
   background: linear-gradient(135deg,
       rgba(244, 228, 193, 0.8) 0%,
       rgba(232, 213, 183, 0.2) 100%);
+  backdrop-filter: blur(10px);
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -126,7 +129,7 @@ h2.anchor-only {
 // Color scheme: earthy tones with gold accents
 :root {
   // Medieval color palette
-  --parchment: #f4e4c1;
+  --parchment: rgba(250, 247, 247, 0.68);
   --aged-paper: #e8d5b7;
   --ink: #2c2416;
   --gold: #d4af37;

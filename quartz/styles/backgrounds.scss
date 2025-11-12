@@ -1,16 +1,17 @@
 // Background image variables
 :root {
-  --parchment-bg: url('/images/a_still_of_parchment_paper.png');
+  --parchment-bg: url('/static/images/paper-texture-top-view-2.jpg');
+  --parchment-height: 100vh * 2912;
 }
 
 // Body background with parchment texture
 body {
   background-image: var(--parchment-bg);
+  background-size: 100%; // 2912px is the height of the parchment image
+  background-position: cover;
   background-attachment: fixed;
-  background-size: cover;
-  background-position: center;
   background-repeat: no-repeat;
-  min-height: 100vh;
+  background-color: (rgba(0, 0, 0, 0.745), rgba(0, 0, 0, 0.95));
 }
 
 // For dark mode (if needed)
