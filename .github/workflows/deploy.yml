@@ -81,70 +81,56 @@ jobs:
 
             setupContent();
 
-      - name: Copy static assets
+      - name: Setup static assets
         run: |
           # Clear any existing files
           rm -rf public
-          mkdir -p public/static
           
-          # Copy all static files from quartz/static to public/static
+          # Create base directories
+          mkdir -p public/static/images
+          
+          # 1. First, copy all static files from quartz/static to public/static
           if [ -d "quartz/static" ]; then
             echo "📁 Copying quartz/static/ to public/static/"
-            cp -r quartz/static/* public/static/
-          else
-            echo "⚠️  quartz/static/ directory not found!"
+            # Copy everything except images first
+            find quartz/static -type f ! -name "*.png" ! -name "*.jpg" ! -name "*.jpeg" ! -name "*.gif" ! -name "*.svg" -exec cp --parents {} public/ \;
+            # Then copy images to the correct location
+            if [ -d "quartz/static/images" ]; then
+              cp -r quartz/static/images/* public/static/images/
+            fi
           fi
           
-          # Verify critical assets
+          # 2. Check for logo in common locations and copy to public/static/images/
+          for dir in "static" "assets" "images" ""; do
+            if [ -f "$dir/logo.png" ]; then
+              echo "📄 Found logo.png in $dir/, copying to public/static/images/"
+              cp "$dir/logo.png" public/static/images/
+              break
+            fi
+          done
+          
+          # 3. Verify all critical assets are in place
           echo -e "\n🔍 Verifying critical assets:"
-          for asset in "logo.png" "paper-texture-top-view-2.jpg" "background.jpg"; do
+          for asset in "logo.png" "paper-texture-top-view-2.jpg"; do
             if [ -f "public/static/images/$asset" ]; then
               echo "✅ Found: public/static/images/$asset"
             else
               echo "❌ Missing: public/static/images/$asset"
+              echo "   Searching in project..."
+              find . -name "$asset" -not -path "*/node_modules/*" -not -path "*/public/*" 2>/dev/null || echo "   Not found in project"
             fi
           done
           
-          # Show final directory structure
-          echo -e "\n📁 Final public directory structure:"
-          find public -type f | sort
-          
-          # Enhanced verification with detailed debugging
-          echo -e "\n=== Enhanced Verification ==="
-          for asset in "${!required_assets[@]}"; do
-            target_path="public${required_assets[$asset]}"
-            echo -e "\n--- Checking $asset ---"
-            
-            # Check if file exists at target
-            if [ -f "$target_path" ]; then
-              echo "✓ Found at: $target_path"
-              echo "  File details: $(ls -la "$target_path" 2>/dev/null || echo 'Not found')"
-            else
-              echo "✗ Not found at: $target_path"
-            fi
-            
-            # Check where the file actually is
-            echo -e "\nSearching for $asset in project..."
-            found_locations=$(find . -name "$asset" -not -path "*/node_modules/*" -not -path "*/public/*" 2>/dev/null || true)
-            
-            if [ -n "$found_locations" ]; then
-              echo "  Found in these locations:"
-              echo "$found_locations" | while read -r loc; do
-                echo "  - $loc (size: $(du -h "$loc" | cut -f1))"
-              done
-            else
-              echo "  File not found in project (except possibly in node_modules or public)"
-            fi
-            
-            # Check if file exists in built output
-            echo -e "\nChecking built files for references to $asset:"
-            find public -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" \) -exec grep -l "$asset" {} \; 2>/dev/null | while read -r file; do
-              echo "  Referenced in: $file"
-              grep -o "[^\"]*$asset[^\"]*" "$file" | sort | uniq | while read -r ref; do
-                echo "    - $ref"
-              done
-            done || echo "  No references found in built files"
+          # 4. Clean up any duplicate files (case-insensitive)
+          echo -e "\n🧹 Cleaning up duplicate files..."
+          find public -type f -iname "*.jpg" -o -iname "*.png" | sort -f | uniq -i -d | while read -r dup; do
+            echo "   Removing duplicate: $dup"
+            rm -f "$dup"
           done
+          
+          # 5. Show final directory structure
+          echo -e "\n📁 Final public directory structure (images only):"
+          find public -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) | sort
           
           # Log final structure for debugging
           echo -e "\nFinal public directory structure:"
