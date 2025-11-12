@@ -85,23 +85,43 @@ jobs:
         run: |
           # Clear any existing files
           rm -rf public
-          mkdir -p public
+          mkdir -p public/static/images
           
-          # Copy assets directly to public/
-          if [ -d "assets" ]; then
-            echo "Copying assets/..."
-            cp -r assets/* public/ 2>/dev/null || true
-          fi
+          # List of required assets
+          declare -a required_assets=(
+            "logo.png"
+            "paper-texture-top-view-2.jpg"
+            "background.jpg"
+          )
           
-          if [ -d "static" ]; then
-            echo "Copying static/..."
-            cp -r static/* public/ 2>/dev/null || true
-          fi
+          # Function to find and copy assets
+          find_and_copy_asset() {
+            local asset_name=$1
+            local source_dirs=("static/images" "quartz/static/images" "assets/images" "images" "static" "quartz/static" "assets")
+            
+            for dir in "${source_dirs[@]}"; do
+              if [ -f "$dir/$asset_name" ]; then
+                echo "Found $asset_name in $dir/"
+                cp "$dir/$asset_name" public/static/images/
+                return 0
+              fi
+            done
+            echo "Warning: Could not find $asset_name in any source directory"
+            return 1
+          }
           
-          if [ -d "quartz/static" ]; then
-            echo "Copying quartz/static/..."
-            cp -r quartz/static/* public/ 2>/dev/null || true
-          fi
+          # Copy all required assets
+          for asset in "${required_assets[@]}"; do
+            find_and_copy_asset "$asset"
+          done
+          
+          # Copy any additional files from static/ and quartz/static/
+          for dir in static quartz/static; do
+            if [ -d "$dir" ]; then
+              echo "Copying additional files from $dir/..."
+              cp -r "$dir"/* public/ 2>/dev/null || true
+            fi
+          done
           
           # Handle custom.scss
           if [ -f "custom.scss" ]; then
@@ -109,8 +129,20 @@ jobs:
             cp custom.scss public/styles/
           fi
           
+          # Verify all required files were copied
+          echo -e "\nVerifying required files in public/static/images/:"
+          for asset in "${required_assets[@]}"; do
+            if [ -f "public/static/images/$asset" ]; then
+              echo "✓ $asset"
+            else
+              echo "✗ $asset (missing)"
+              echo "  Searched in:"
+              find . -name "$asset" -not -path "*/node_modules/*" -not -path "*/public/*" | head -n 3
+            fi
+          done
+          
           # Log final structure for debugging
-          echo "Final public directory structure:"
+          echo -e "\nFinal public directory structure:"
           find public -type f | sort
 
       - name: Build Quartz with verbose output
