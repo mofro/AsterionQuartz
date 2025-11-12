@@ -94,7 +94,7 @@ jobs:
             "background.jpg"
           )
           
-          # Function to find and copy assets
+          # Function to find and copy assets to /images/
           find_and_copy_asset() {
             local asset_name=$1
             local source_dirs=("static/images" "quartz/static/images" "assets/images" "images" "static" "quartz/static" "assets")
@@ -102,8 +102,8 @@ jobs:
             for dir in "${source_dirs[@]}"; do
               if [ -f "$dir/$asset_name" ]; then
                 echo "Found $asset_name in $dir/"
-                mkdir -p "public/static/images"
-                cp "$dir/$asset_name" "public/static/images/"
+                mkdir -p "public/images"
+                cp "$dir/$asset_name" "public/images/"
                 return 0
               fi
             done
@@ -117,11 +117,12 @@ jobs:
             find_and_copy_asset "$asset"
           done
           
-          # Copy any additional files from static/ and quartz/static/
+          # Copy any additional files from static/ and quartz/static/ but skip images
           for dir in static quartz/static; do
             if [ -d "$dir" ]; then
-              echo "Copying additional files from $dir/..."
-              cp -r "$dir"/* public/ 2>/dev/null || true
+              echo "Copying non-image files from $dir/..."
+              # Copy everything except images
+              find "$dir" -type f ! -name "*.png" ! -name "*.jpg" ! -name "*.jpeg" ! -name "*.gif" ! -name "*.svg" -exec cp --parents {} public/ \; 2>/dev/null || true
             fi
           done
           
@@ -131,10 +132,10 @@ jobs:
             cp custom.scss public/styles/
           fi
           
-          # Verify all required files were copied
-          echo -e "\nVerifying required files in public/static/images/:"
+          # Verify all required files were copied to /images/
+          echo -e "\nVerifying required files in public/images/:"
           for asset in "${required_assets[@]}"; do
-            if [ -f "public/static/images/$asset" ]; then
+            if [ -f "public/images/$asset" ]; then
               echo "✓ $asset"
             else
               echo "✗ $asset (missing)"
