@@ -1,0 +1,256 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'  # Quartz requires Node.js >= 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          # Install all dependencies
+          npm install
+
+      - name: Setup Quartz content and assets
+        run: |
+          # 1. Handle content directory
+          if [ -L "content" ] && [ ! -e "content" ]; then
+            echo "Removing broken symlink..."
+            rm content
+          fi
+          
+          if [ ! -e "content" ]; then
+            echo "[INFO] Creating content directory..."
+            mkdir -p content
+            if [ -d "obsidian" ]; then
+              echo "[COPY] Copying content from obsidian directory..."
+              cp -r obsidian/* content/ 2>/dev/null || echo "[WARN] No files to copy from obsidian/"
+            else
+              echo "[WARN] obsidian/ directory not found. Using empty content directory."
+            fi
+          elif [ -d "content" ] && [ -d "obsidian" ]; then
+            echo "[SYNC] Syncing obsidian/ with content/ directory (safe update only)..."
+            echo "       This will add/update files but not delete anything from content/"
+            rsync -a --info=name1,stats1 obsidian/ content/ || \
+              echo "[WARN] rsync encountered an error (this might be okay if obsidian/ is empty)"
+          else
+            echo "[INFO] Using existing content/ directory as-is"
+          fi
+          
+          # Verify content directory
+          echo "[STATUS] Content directory status:"
+          ls -la content/ 2>/dev/null || echo "  (empty)"
+          
+          # 2. Set up static assets directory structure
+          echo "[SETUP] Preparing static assets..."
+          
+          # Create a temporary directory for assets
+          mkdir -p temp_assets
+          
+          # 3. Copy static assets to temporary location first
+          echo "[COPY] Collecting static assets..."
+          
+          # Copy from obsidian/assets if it exists
+          if [ -d "obsidian/assets" ]; then
+            echo "[COPY] Collecting assets from obsidian/assets/..."
+            mkdir -p temp_assets/obsidian_assets
+            cp -r obsidian/assets/* temp_assets/obsidian_assets/ 2>/dev/null || true
+          fi
+          
+          # Copy from root static/ directory if it exists
+          if [ -d "static" ]; then
+            echo "[COPY] Collecting assets from static/..."
+            mkdir -p temp_assets/static_files
+            cp -r static/* temp_assets/static_files/ 2>/dev/null || true
+          fi
+          
+          # 4. Now copy all collected assets to public/static
+          echo "[COPY] Moving assets to public/static/..."
+          mkdir -p public/static
+          
+          # Copy from temp directories if they exist
+          if [ -d "temp_assets/obsidian_assets" ]; then
+            cp -r temp_assets/obsidian_assets/* public/static/ 2>/dev/null || true
+          fi
+          
+          if [ -d "temp_assets/static_files" ]; then
+            cp -r temp_assets/static_files/* public/static/ 2>/dev/null || true
+          fi
+          
+          # Clean up temporary files
+          rm -rf temp_assets
+          
+          # 4. Handle custom styles
+          echo "[STYLES] Setting up styles..."
+          mkdir -p public/static/styles
+          
+          if [ -f "custom.scss" ]; then
+            echo "[STYLES] Using custom.scss..."
+            cp custom.scss public/static/styles/
+          else
+            echo "[STYLES] No custom.scss found, using default styles"
+          fi
+          
+          # 5. Verify static assets were copied
+          echo "[VERIFY] Static assets in public/static:"
+          ls -la public/static/ 2>/dev/null || echo "  (no static assets found)"
+          
+          # 4. Verify directory structure
+          echo "Final directory structure:"
+          ls -la
+          echo "Static directory:"
+          ls -la static/ || echo "No static directory"
+          
+          # Create a simple plugin to inject our CSS
+          mkdir -p quartz/plugins/custom
+          echo 'import { QuartzTransformerPlugin } from "../types"
+          
+          export const CustomCSS: QuartzTransformerPlugin = () => ({
+            name: "CustomCSS",
+            htmlPlugins() {
+              return [
+                () => (tree: any) => {
+                  const head = tree.children.find((child: any) => 
+                    child.type === "element" && child.tagName === "head"
+                  )
+                  
+                  if (head) {
+                    head.children.push({
+                      type: "element",
+                      tagName: "link",
+                      properties: {
+                        rel: "stylesheet",
+                        href: "/css/custom.css"
+                      },
+                      children: []
+                    })
+                  }
+                }
+              ]
+            }
+          })' > quartz/plugins/custom/css.ts
+          
+          # Update the config to include our custom plugin
+          sed -i 's/transformers: \[/transformers: [\n      CustomCSS(),/' quartz.config.ts
+          sed -i 's|import { QuartzConfig } from "./quartz/cfg"|import { QuartzConfig } from "./quartz/cfg"\nimport { CustomCSS } from "./quartz/plugins/custom/css"|' quartz.config.ts
+          
+      - name: Update Quartz configuration
+        run: |
+          # Update the baseUrl in the config to include the full GitHub Pages URL
+          sed -i 's|baseUrl: "[^"]*"|baseUrl: "mofro.github.io/${{ github.event.repository.name }}/"|' quartz.config.ts
+          
+          # Verify the config was updated
+
+      - name: Build and prepare site
+        env:
+          BASE_URL: "${{ github.event.repository.name }}"
+        run: |
+          set -e  # Exit on error
+          
+          # Print current directory structure for debugging
+          echo "[DEBUG] Current directory structure:"
+          find . -maxdepth 2 -type d | sort
+          
+          # 1. Ensure custom styles directory exists
+          mkdir -p quartz/styles
+          
+          # 2. Copy any custom SCSS files
+          if [ -f "custom.scss" ]; then
+            echo "[BUILD] Copying custom SCSS..."
+            cp custom.scss quartz/styles/_custom.scss
+          fi
+          
+          # 3. Build the site with verbose output
+          echo "[BUILD] Building site with base directory: $BASE_URL"
+          echo "[BUILD] Running: npx quartz build --baseDir \"$BASE_URL\" --verbose"
+          npx quartz build --baseDir "$BASE_URL" --verbose 2>&1 | tee build.log || \
+            { echo "[ERROR] Build failed. Log:"; cat build.log; exit 1; }
+          
+          # 4. Verify the build output
+          echo "[VERIFY] Build output in public/:"
+          find public -type f | sort
+          
+          # 5. Check for CSS files to verify styles were processed
+          echo "[VERIFY] Checking for compiled CSS:"
+          find public -name "*.css" | xargs ls -la || echo "[WARN] No CSS files found"
+          
+          # 6. Check for static assets
+          echo "[VERIFY] Static assets in build output:"
+          find public -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" | sort || \
+            echo "[WARN] No image files found in build output"
+          
+          # 2. Handle custom styles if they exist
+          if [ -d "src/styles" ]; then
+            echo "🎨 Processing custom styles..."
+            mkdir -p public/css
+            
+            # Compile SCSS if sass is available
+            if command -v sass >/dev/null 2>&1; then
+              # Compile SCSS to CSS
+              sass src/styles/:public/css/
+              
+              # Add link to custom styles in the HTML head
+              if [ -f "public/index.html" ]; then
+                echo "📝 Adding custom styles to index.html..."
+                sed -i.bak '/<head>/a\    <link href="/css/custom.css" rel="stylesheet" />' public/index.html
+                rm -f public/index.html.bak
+              fi
+            else
+              echo "⚠️  sass command not found. Skipping SCSS compilation."
+            fi
+          fi
+          
+          # 3. Skip this redundant copy as we've already handled static assets
+          echo "ℹ️  Static assets already processed in previous step"
+          
+          # 4. Prepare for deployment
+          echo "📦 Preparing for deployment..."
+          
+          # Ensure .nojekyll is present for SPA routing
+          touch public/.nojekyll
+          
+          # Verify build output
+          echo "📂 Build output:"
+          ls -la public/
+          echo "📁 Static assets:"
+          ls -la public/static/ || echo "No static assets found"
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
