@@ -82,96 +82,36 @@ jobs:
             setupContent();
 
       - name: Copy static assets
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const fs = require('fs').promises;
-            const path = require('path');
-            
-            async function copyAssets() {
-              try {
-                // Clear the public/static directory first
-                await fs.rm('public/static', { recursive: true, force: true });
-                await fs.mkdir('public/static', { recursive: true });
-
-                // Function to copy files from src to dest, merging directories
-                const copyFiles = async (src, dest) => {
-                  try {
-                    const entries = await fs.readdir(src, { withFileTypes: true });
-                    
-                    for (const entry of entries) {
-                      // Skip hidden files and directories
-                      if (entry.name.startsWith('.')) continue;
-                      
-                      const srcPath = path.join(src, entry.name);
-                      const destPath = path.join(dest, entry.name);
-                      
-                      if (entry.isDirectory()) {
-                        await fs.mkdir(destPath, { recursive: true });
-                        await copyFiles(srcPath, destPath);
-                      } else {
-                        await fs.mkdir(path.dirname(destPath), { recursive: true });
-                        await fs.copyFile(srcPath, destPath);
-                      }
-                    }
-                  } catch (err) {
-                    if (err.code !== 'ENOENT') throw err;
-                  }
-                };
-
-                // Copy from obsidian/assets to public/static/assets
-                console.log('Copying assets from obsidian/assets/...');
-                await copyFiles('obsidian/assets', 'public/static/assets');
-
-                // Copy from static/ to public/static
-                console.log('Copying from static/...');
-                await copyFiles('static', 'public/static');
-
-                // Copy from quartz/static to public/static (merge contents)
-                console.log('Copying from quartz/static...');
-                await copyFiles('quartz/static', 'public/static');
-
-                // Handle custom styles
-                try {
-                  await fs.access('custom.scss');
-                  console.log('Copying custom.scss...');
-                  await fs.mkdir('public/static/styles', { recursive: true });
-                  await fs.copyFile('custom.scss', 'public/static/styles/custom.scss');
-                } catch (err) {
-                  if (err.code !== 'ENOENT') throw err;
-                  console.log('No custom.scss found, using default styles');
-                }
-
-                // Log the final structure for debugging
-                console.log('Final static assets structure:');
-                const listFiles = async (dir, prefix = '') => {
-                  try {
-                    const entries = await fs.readdir(dir, { withFileTypes: true });
-                    
-                    for (const entry of entries) {
-                      const fullPath = path.join(dir, entry.name);
-                      const relativePath = path.join(prefix, entry.name);
-                      
-                      if (entry.isDirectory()) {
-                        await listFiles(fullPath, relativePath);
-                      } else {
-                        console.log(relativePath);
-                      }
-                    }
-                  } catch (err) {
-                    console.error(`Error listing ${dir}:`, err);
-                  }
-                };
-                
-                await listFiles('public/static');
-                
-              } catch (error) {
-                console.error('Error copying assets:', error);
-                process.exit(1);
-              }
-            }
-
-            copyAssets();
+        run: |
+          # Clear any existing static files
+          rm -rf public/static
+          mkdir -p public/static
+          
+          # Copy assets directly to public/static without nesting
+          if [ -d "assets" ]; then
+            echo "Copying assets/..."
+            cp -r assets/* public/static/ 2>/dev/null || true
+          fi
+          
+          if [ -d "static" ]; then
+            echo "Copying static/..."
+            cp -r static/* public/static/ 2>/dev/null || true
+          fi
+          
+          if [ -d "quartz/static" ]; then
+            echo "Copying quartz/static/..."
+            cp -r quartz/static/* public/static/ 2>/dev/null || true
+          fi
+          
+          # Copy custom.scss if it exists
+          if [ -f "custom.scss" ]; then
+            mkdir -p public/static/styles
+            cp custom.scss public/static/styles/
+          fi
+          
+          # Log final structure for debugging
+          echo "Final static assets structure:"
+          find public/static -type f | sed 's|public/static/||' | sort
 
       - name: Build Quartz
         run: npx quartz build
