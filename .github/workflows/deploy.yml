@@ -69,20 +69,20 @@ jobs:
           echo "[SETUP] Preparing static assets..."
           
           # Create necessary directories
-          mkdir -p static public/static
+          mkdir -p public/static
           
           # 3. Copy static assets from multiple possible locations
           echo "[COPY] Looking for static assets..."
           
-          # Check and copy from obsidian/assets
+          # Check and copy from obsidian/assets directly to public/static
           if [ -d "obsidian/assets" ]; then
-            echo "[COPY] Copying assets from obsidian/assets/..."
-            cp -r obsidian/assets/* static/ 2>/dev/null || true
+            echo "[COPY] Copying assets from obsidian/assets/ to public/static/..."
+            cp -r obsidian/assets/* public/static/ 2>/dev/null || true
           fi
           
           # Check and copy from root static/ directory
           if [ -d "static" ]; then
-            echo "[COPY] Copying existing static/ contents..."
+            echo "[COPY] Copying existing static/ contents to public/static/..."
             cp -r static/* public/static/ 2>/dev/null || true
           fi
           
