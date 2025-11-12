@@ -87,23 +87,23 @@ jobs:
           rm -rf public/static
           mkdir -p public/static
           
-          # Copy assets directly to public/static without nesting
-          if [ -d "assets" ]; then
-            echo "Copying assets/..."
-            cp -r assets/* public/static/ 2>/dev/null || true
-          fi
+          # Function to copy assets with directory structure preservation
+          copy_assets() {
+            local src=$1
+            local dest=$2
+            if [ -d "$src" ]; then
+              echo "Copying $src to $dest"
+              mkdir -p "$dest"
+              cp -r "$src"/. "$dest/" 2>/dev/null || true
+            fi
+          }
           
-          if [ -d "static" ]; then
-            echo "Copying static/..."
-            cp -r static/* public/static/ 2>/dev/null || true
-          fi
+          # Copy assets to match production URL structure
+          copy_assets "assets" "public/static/assets"
+          copy_assets "static" "public/static"
+          copy_assets "quartz/static" "public/static"
           
-          if [ -d "quartz/static" ]; then
-            echo "Copying quartz/static/..."
-            cp -r quartz/static/* public/static/ 2>/dev/null || true
-          fi
-          
-          # Copy custom.scss if it exists
+          # Handle custom.scss
           if [ -f "custom.scss" ]; then
             mkdir -p public/static/styles
             cp custom.scss public/static/styles/
@@ -112,6 +112,11 @@ jobs:
           # Log final structure for debugging
           echo "Final static assets structure:"
           find public/static -type f | sed 's|public/static/||' | sort
+          
+          # Verify important files exist
+          echo "\nVerifying key files:"
+          [ -f "public/static/images/logo.png" ] && echo "✓ logo.png exists" || echo "✗ logo.png missing"
+          [ -f "public/static/images/paper-texture-top-view-2.jpg" ] && echo "✓ paper-texture-top-view-2.jpg exists" || echo "✗ paper-texture-top-view-2.jpg missing"
 
       - name: Build Quartz
         run: npx quartz build
