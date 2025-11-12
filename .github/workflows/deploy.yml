@@ -120,8 +120,8 @@ jobs:
 
       - name: Build Quartz
         run: |
-          # Build with the repository name as base URL for GitHub Pages
-          npx quartz build --baseUrl "https://mofro.github.io/AsterionQuartz"
+          # Build with the repository name as base directory for GitHub Pages
+          npx quartz build --baseDir "/AsterionQuartz"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
