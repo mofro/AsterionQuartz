@@ -1,202 +1,45 @@
-name: Deploy to GitHub Pages
+name: Deploy Quartz site to GitHub Pages
 
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+ push:
+ branches:
+ - main
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+ contents: read
+ pages: write
+ id-token: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: true
+ group: "pages"
+ cancel-in-progress: false
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
+ build:
+ runs-on: ubuntu-22.04
+ steps:
+ - uses: actions/checkout@v4
+ with:
+ fetch-depth: 0
+ - uses: actions/setup-node@v4
+ with:
+ node-version: 22
+ - name: Install Dependencies
+ run: npm install
+ - name: Build Quartz
+ run: npx quartz build
+ - name: Upload artifact
+ uses: actions/upload-pages-artifact@v3
+ with:
+ path: public
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'  # Quartz requires Node.js >= 22
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Clean public directory
-        run: |
-          rm -rf public
-          mkdir -p public/static
-
-      - name: Setup content directory
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const fs = require('fs').promises;
-            
-            async function setupContent() {
-              try {
-                // Handle content directory
-                try {
-                  const stats = await fs.lstat('content');
-                  if (stats.isSymbolicLink()) {
-                    console.log('Removing broken symlink...');
-                    await fs.unlink('content');
-                  }
-                } catch (err) {
-                  if (err.code !== 'ENOENT') throw err;
-                }
-
-                // Create content directory if it doesn't exist
-                try {
-                  await fs.mkdir('content', { recursive: true });
-                } catch (err) {
-                  if (err.code !== 'EEXIST') throw err;
-                }
-
-                // Copy from obsidian/ to content/ if obsidian exists
-                try {
-                  await fs.access('obsidian');
-                  console.log('Copying content from obsidian directory...');
-                  await fs.cp('obsidian', 'content', { recursive: true, force: true });
-                } catch (err) {
-                  if (err.code !== 'ENOENT') throw err;
-                  console.log('obsidian/ directory not found, skipping content copy');
-                }
-              } catch (error) {
-                console.error('Error setting up content:', error);
-                process.exit(1);
-              }
-            }
-
-            setupContent();
-
-      - name: Prepare static assets
-        run: |
-          # Clear any existing files
-          rm -rf public
-          
-          # Create base directories
-          mkdir -p public/static/images
-          
-          # 1. Copy all static files to public/static
-          if [ -d "quartz/static" ]; then
-            echo "📁 Copying quartz/static/ to public/static/"
-            cp -r quartz/static/* public/static/
-          fi
-          
-          # 2. Set up static assets
-          echo "🔍 Setting up static assets..."
-          
-          # Copy from quartz/static/images if it exists
-          if [ -d "quartz/static/images" ]; then
-            echo "📁 Copying quartz/static/images/ to public/static/images/"
-            mkdir -p public/static/images
-            cp -r quartz/static/images/* public/static/images/
-          fi
-          
-          # Copy specific known assets
-          for asset in "logo.png" "paper-texture-top-view-2.jpg"; do
-            # Check in common locations
-            for dir in "static" "assets" "images" ""; do
-              if [ -f "$dir/$asset" ]; then
-                echo "📄 Found $asset in $dir/, copying to public/static/images/"
-                mkdir -p public/static/images
-                cp "$dir/$asset" "public/static/images/"
-                break
-              fi
-            done
-          done
-          
-          # 4. Show final directory structure
-          echo -e "\n📁 Prepared public directory structure:"
-          find public -type f | sort
-          
-      - name: Build Quartz site
-        run: |
-          # Build with the correct base URL for GitHub Pages
-          echo "🏗️  Building Quartz site..."
-          npx quartz build --baseDir "/${{ github.event.repository.name }}"
-          
-          # Verify built files
-          echo -e "\n🔍 Verifying built files:"
-          echo "Checking for critical files:"
-          for file in "index.html" "static/images/paper-texture-top-view-2.jpg" "static/images/logo.png"; do
-            if [ -f "public/$file" ]; then
-              echo "✅ Found: public/$file"
-            else
-              echo "❌ Missing: public/$file"
-            fi
-          done
-          
-          # Check for image files in the public directory
-          echo -e "\n🔍 Checking for image files:"
-          find public -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) | sort
-          
-          # Check CSS files for image references
-          echo -e "\n🔍 Checking CSS files for image references:"
-          for cssfile in $(find public -name "*.css" -type f); do
-            echo -e "\n📄 $cssfile"
-            # Use head to prevent long outputs that might cause broken pipes
-            grep -o 'url([^)]*)' "$cssfile" | grep -i -E 'logo|background|texture|paper' | head -n 10 | sort | uniq
-          done
-
-      - name: Debug build process
-        run: |
-          # Show what files exist before build
-          echo "=== Files before build ==="
-          find public -type f | sort
-          
-          # Show disk space
-          echo -e "\n=== Disk space ==="
-          df -h
-          
-          # Run build with debug output
-          echo -e "\n=== Build output ==="
-          npx quartz build --baseDir "/AsterionQuartz" --verbose
-          
-          # Show what files exist after build
-          echo -e "\n=== Files after build ==="
-          find public -type f | sort
-          
-          # Check for our key files
-          echo -e "\n=== Looking for key files ==="
-          for file in "logo.png" "paper-texture"; do
-            echo -e "\nFiles matching '$file':"
-            find public -iname "*${file}*"
-            echo -e "\nReferences to '$file' in HTML/CSS:"
-            find public \( -name "*.html" -o -name "*.css" \) -exec grep -l "$file" {} \; | head -n 5
-          done
-
-      - name: Verify asset paths
-        run: |
-          echo "Checking for logo.png..."
-          find public -name "logo.png" -o -name "*.css" | xargs grep -l "logo.png" || echo "logo.png not found in any files"
-          echo "\nChecking for paper-texture images..."
-          find public -name "paper-texture-*" -o -name "*.css" | xargs grep -l "paper-texture" || echo "paper-texture images not found in any files"
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'public/'
-
-  deploy:
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+ deploy:
+ needs: build
+ environment:
+ name: github-pages
+ url: ${{ steps.deployment.outputs.page_url }}
+ runs-on: ubuntu-latest
+ steps:
+ - name: Deploy to GitHub Pages
+ id: deployment
+ uses: actions/deploy-pages@v4
