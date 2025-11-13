@@ -68,34 +68,49 @@ jobs:
 
       - name: Build Quartz site
         run: |
-          # If this is a project site, set baseDir so absolute paths match /<repo>/
-          npx quartz build --baseDir "/${{ github.event.repository.name }}"
+          # For GitHub Pages, we need to set the base URL to the repository name
+          # This ensures all asset paths are correctly prefixed with /<repo-name>/
+          echo "Building with base URL: /${{ github.event.repository.name }}"
+          npx quartz build --baseDir "/${{ github.event.repository.name }}" --serve
 
-      - name: Ensure static assets are present in public (copy AFTER build)
+      - name: Ensure static assets are present in public (AFTER build)
         run: |
           set -eux
+          
+          # Normalize directory structure to use lowercase only
+          echo "Normalizing directory structure to lowercase..."
+          
+          # Create target directories
           mkdir -p public/static/images
-
-          # Copy from common locations into public/static so built HTML/CSS find them
-          cp -r quartz/static/* public/static/ 2>/dev/null || true
-          cp -r static/* public/static/ 2>/dev/null || true
-          cp -r assets/* public/static/ 2>/dev/null || true
-          cp -r images/* public/static/images/ 2>/dev/null || true
-
-          # Also copy obsidian attachments if present
-          cp -r obsidian/attachments/* public/static/images/ 2>/dev/null || true
-
-          # Copy specific known assets to multiple locations (cover absolute/relative references)
-          for asset in "logo.png" "paper-texture-top-view-2.jpg" "paper-texture.jpg" "paper-texture.png"; do
-            for dir in "quartz/static" "static" "assets" "images" "obsidian" "obsidian/attachments" ""; do
-              if [ -f "$dir/$asset" ]; then
-                cp "$dir/$asset" public/ || true
-                cp "$dir/$asset" public/static/ || true
-                cp "$dir/$asset" public/static/images/ || true
-                break
-              fi
-            done
+          
+          # Find and copy all static assets, normalizing paths to lowercase
+          find . -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.gif" -o -iname "*.svg" \) \
+            -not -path "*/node_modules/*" \
+            -not -path "*/.git/*" \
+            -not -path "*/public/*" | while read -r file; do
+              
+              # Get the filename and extension
+              filename=$(basename -- "$file")
+              extension="${filename##*.}"
+              base_filename="${filename%.*}"
+              
+              # Convert to lowercase and replace spaces with hyphens
+              normalized_name=$(echo "${base_filename}" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+              target_file="public/static/images/${normalized_name}.${extension}"
+              
+              echo "Copying $file to $target_file"
+              cp "$file" "$target_file" 2>/dev/null || true
           done
+          
+          # Create case-insensitive symlinks for GitHub Pages compatibility
+          cd public
+          ln -sfn static/images Images 2>/dev/null || true
+          ln -sfn static/images static/Images 2>/dev/null || true
+          cd ..
+          
+          # Verify the structure
+          echo -e "\nFinal file structure in public/static/images/:"
+          find public/static/images -type f | sort
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
