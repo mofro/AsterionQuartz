@@ -33,20 +33,34 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup content directory (copy from obsidian if present)  # replaced github-script with shell
+      - name: Setup content directory (handle symlink/broken link and copy obsidian if present)
         run: |
           set -eux
-          # ensure we are in the repository workspace
           echo "Workspace: $GITHUB_WORKSPACE"
           pwd
           ls -la || true
 
-          # create content dir (recursive, idempotent)
-          mkdir -p content
+          # If 'content' is a symlink, remove it (it's probably an absolute symlink to your local machine)
+          if [ -L "content" ]; then
+            echo "'content' is a symlink -> $(readlink -f content || readlink content)"
+            echo "Removing symlink 'content' so we can create a real directory"
+            rm -f content
+          fi
 
-          # if obsidian dir exists, copy its contents into content/
+          # If 'content' exists but is not a directory (regular file), remove it
+          if [ -e "content" ] && [ ! -d "content" ]; then
+            echo "'content' exists and is not a directory; removing it"
+            rm -f content
+          fi
+
+          # Now create the content directory (idempotent)
+          mkdir -p content
+          echo "Created content/ directory."
+
+          # Copy obsidian contents if obsidian/ exists
           if [ -d "obsidian" ]; then
-            echo "Copying obsidian -> content"
+            echo "Copying obsidian/ -> content/"
+            # Use cp -a to preserve attributes and copy hidden files
             cp -a obsidian/. content/
           else
             echo "No obsidian/ directory found, leaving content/ as-is"
