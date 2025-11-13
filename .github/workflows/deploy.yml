@@ -68,49 +68,11 @@ jobs:
 
       - name: Build Quartz site
         run: |
-          # For GitHub Pages, we need to set the base URL to the repository name
-          # This ensures all asset paths are correctly prefixed with /<repo-name>/
-          echo "Building with base URL: /${{ github.event.repository.name }}"
-          npx quartz build --baseDir "/${{ github.event.repository.name }}" --serve
+          # Set the base URL for GitHub Pages
+          echo "Building with base URL: /${{ github.event.repository.name }}/"
+          BASE_URL="/${{ github.event.repository.name }}/" npx quartz build
 
-      - name: Ensure static assets are present in public (AFTER build)
-        run: |
-          set -eux
-          
-          # Normalize directory structure to use lowercase only
-          echo "Normalizing directory structure to lowercase..."
-          
-          # Create target directories
-          mkdir -p public/static/images
-          
-          # Find and copy all static assets, normalizing paths to lowercase
-          find . -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.gif" -o -iname "*.svg" \) \
-            -not -path "*/node_modules/*" \
-            -not -path "*/.git/*" \
-            -not -path "*/public/*" | while read -r file; do
-              
-              # Get the filename and extension
-              filename=$(basename -- "$file")
-              extension="${filename##*.}"
-              base_filename="${filename%.*}"
-              
-              # Convert to lowercase and replace spaces with hyphens
-              normalized_name=$(echo "${base_filename}" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
-              target_file="public/static/images/${normalized_name}.${extension}"
-              
-              echo "Copying $file to $target_file"
-              cp "$file" "$target_file" 2>/dev/null || true
-          done
-          
-          # Create case-insensitive symlinks for GitHub Pages compatibility
-          cd public
-          ln -sfn static/images Images 2>/dev/null || true
-          ln -sfn static/images static/Images 2>/dev/null || true
-          cd ..
-          
-          # Verify the structure
-          echo -e "\nFinal file structure in public/static/images/:"
-          find public/static/images -type f | sort
+      # Assets are now handled during the build process with the correct base URL
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
