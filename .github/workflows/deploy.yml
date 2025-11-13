@@ -1,38 +1,93 @@
 name: Deploy Quartz site to GitHub Pages
- 
+
 on:
   push:
     branches:
       - main
- 
+
 permissions:
   contents: read
   pages: write
   id-token: write
- 
+
 concurrency:
   group: "pages"
-  cancel-in-progress: false
- 
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for git info
-      - uses: actions/setup-node@v4
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install Dependencies
+          cache: 'npm'
+
+      - name: Install dependencies
         run: npm ci
-      - name: Build Quartz
-        run: npx quartz build
+
+      - name: Setup content directory (copy from obsidian if present)
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs').promises;
+            try {
+              await fs.mkdir('content', { recursive: true });
+              try {
+                await fs.access('obsidian');
+                console.log('Copying obsidian -> content');
+                await fs.cp('obsidian', 'content', { recursive: true, force: true });
+              } catch (e) {
+                console.log('No obsidian/ directory found, leaving content/ as-is');
+              }
+            } catch (err) {
+              console.error('Error setting up content:', err);
+              process.exit(1);
+            }
+
+      - name: Build Quartz site
+        run: |
+          # If this is a project site, set baseDir so absolute paths match /<repo>/
+          npx quartz build --baseDir "/${{ github.event.repository.name }}"
+
+      - name: Ensure static assets are present in public (copy AFTER build)
+        run: |
+          set -eux
+          mkdir -p public/static/images
+
+          # Copy from common locations into public/static so built HTML/CSS find them
+          cp -r quartz/static/* public/static/ 2>/dev/null || true
+          cp -r static/* public/static/ 2>/dev/null || true
+          cp -r assets/* public/static/ 2>/dev/null || true
+          cp -r images/* public/static/images/ 2>/dev/null || true
+
+          # Also copy obsidian attachments if present
+          cp -r obsidian/attachments/* public/static/images/ 2>/dev/null || true
+
+          # Copy specific known assets to multiple locations (cover absolute/relative references)
+          for asset in "logo.png" "paper-texture-top-view-2.jpg" "paper-texture.jpg" "paper-texture.png"; do
+            for dir in "quartz/static" "static" "assets" "images" "obsidian" "obsidian/attachments" ""; do
+              if [ -f "$dir/$asset" ]; then
+                cp "$dir/$asset" public/ || true
+                cp "$dir/$asset" public/static/ || true
+                cp "$dir/$asset" public/static/images/ || true
+                break
+              fi
+            done
+          done
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: public
- 
+
   deploy:
     needs: build
     environment:
