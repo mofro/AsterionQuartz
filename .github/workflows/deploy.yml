@@ -33,24 +33,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup content directory (copy from obsidian if present)
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const fs = require('fs').promises;
-            try {
-              await fs.mkdir('content', { recursive: true });
-              try {
-                await fs.access('obsidian');
-                console.log('Copying obsidian -> content');
-                await fs.cp('obsidian', 'content', { recursive: true, force: true });
-              } catch (e) {
-                console.log('No obsidian/ directory found, leaving content/ as-is');
-              }
-            } catch (err) {
-              console.error('Error setting up content:', err);
-              process.exit(1);
-            }
+      - name: Setup content directory (copy from obsidian if present)  # replaced github-script with shell
+        run: |
+          set -eux
+          # ensure we are in the repository workspace
+          echo "Workspace: $GITHUB_WORKSPACE"
+          pwd
+          ls -la || true
+
+          # create content dir (recursive, idempotent)
+          mkdir -p content
+
+          # if obsidian dir exists, copy its contents into content/
+          if [ -d "obsidian" ]; then
+            echo "Copying obsidian -> content"
+            cp -a obsidian/. content/
+          else
+            echo "No obsidian/ directory found, leaving content/ as-is"
+          fi
 
       - name: Build Quartz site
         run: |
