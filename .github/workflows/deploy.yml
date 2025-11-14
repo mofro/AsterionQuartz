@@ -70,7 +70,7 @@ jobs:
         run: |
           # Set the base URL for GitHub Pages
           echo "Building with base URL: /${{ github.event.repository.name }}/"
-          BASE_URL="/${{ github.event.repository.name }}/" npx quartz build
+          BASE_URL="/${{ github.event.repository.name }}/" npx quartz build --baseDir /AsterionQuartz
 
       # Assets are now handled during the build process with the correct base URL
 
