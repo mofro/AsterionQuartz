@@ -12,15 +12,15 @@ const config: QuartzConfig = {
     pageTitleSuffix: "",
     enableSPA: true,
     enablePopovers: true,
-    analytics: {
-      provider: "plausible",
-    },
+    // analytics: {
+    //   provider: "plausible",
+    // },
     locale: "en-US",
     baseUrl: (() => {
       // For local development, use a default domain
       if (process.env.NODE_ENV !== 'production') {
         return "http://localhost:8080";
-      }
+      }``
 
       // For production, ensure it's a valid URL
       if (process.env.BASE_URL) {

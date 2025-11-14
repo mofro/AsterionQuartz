@@ -5,8 +5,8 @@ const config: QuartzConfig = {
   configuration: {
     pageTitle: "The Asterion Garden",
     pageIcon: {
-      light: "static/images/logo.png",
-      dark: "static/images/logo.png",
+      light: "static/images/logo-optimized.png",
+      dark: "static/images/logo-optimized.png",
     },
     enableSPA: true,
     enablePopovers: true,
