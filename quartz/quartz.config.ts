@@ -27,6 +27,9 @@ const config: QuartzConfig = {
     theme: {
       fontOrigin: "googleFonts",
       cdnCaching: true,
+      scss: {
+        additionalData: `$base-dir: ${process.env.NODE_ENV === 'production' ? '"/AsterionQuartz"' : '""'};`
+      },
       typography: {
         header: "Schibsted Grotesk",
         body: "Source Sans Pro",
