@@ -16,8 +16,22 @@ const config: QuartzConfig = {
       provider: "plausible",
     },
     locale: "en-US",
-    baseUrl: process.env.BASE_URL || "/",
-    ignorePatterns: ["private", "templates/**", ".obsidian", "_notes", "**/_templates"],
+    baseUrl: (() => {
+      // For local development, use a default domain
+      if (process.env.NODE_ENV !== 'production') {
+        return "http://localhost:8080";
+      }
+
+      // For production, ensure it's a valid URL
+      if (process.env.BASE_URL) {
+        const path = process.env.BASE_URL.replace(/^\/+|\/+$/g, '');
+        return `https://${path}.github.io/${path}`;
+      }
+
+      // Fallback to a default domain
+      return "https://example.com";
+    })(),
+    ignorePatterns: ["private", "templates", ".obsidian", "_notes", "**/_templates"],
     defaultDateType: "modified",
     theme: {
       fontOrigin: "googleFonts",
