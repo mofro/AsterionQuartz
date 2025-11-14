@@ -54,7 +54,7 @@ main {
 .dark body {
   background:
     linear-gradient(rgba(0, 0, 0, 0.745), rgba(0, 0, 0, 0.95)),
-    url('/static/images/paper-texture-top-view-2-optimized.jpg') fixed;
+    url('static/images/paper-texture-top-view-2-optimized.jpg') fixed;
   background-size: cover;
 }
 
@@ -63,7 +63,7 @@ main {
 .light body {
   background:
     linear-gradient(rgba(214, 201, 160, 0.5), rgba(140, 125, 99, 0.5)),
-    url('/static/images/paper-texture-top-view-2-optimized.jpg') fixed;
+    url('static/images/paper-texture-top-view-2-optimized.jpg') fixed;
   background-size: cover;
 }
 
